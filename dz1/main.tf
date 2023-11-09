@@ -11,8 +11,15 @@ provider "yandex" {
   zone = "ru-central1-a"
 }
 
-resource "yandex_compute_instance" "vm-1" {
-  name = "terraform1"
+resource "yandex_vpc_network" "nginx" {}
+
+resource "yandex_vpc_subnet" "nginx" {
+  network_id     = "${yandex_vpc_network.nginx.id}"
+  v4_cidr_blocks = ["192.168.0.0/16"]
+  zone           = "ru-central1-a"
+}
+
+resource "yandex_compute_instance" "nginx" {
   resources {
     cores = 2
     memory = 4
@@ -23,15 +30,15 @@ resource "yandex_compute_instance" "vm-1" {
     }
   }
   network_interface {
-    subnet_id = "${yandex_vpc_subnet.foo.id}"
+    subnet_id = "${yandex_vpc_subnet.nginx.id}"
+    nat = true
+  }
+  metadata = {
+    ssh-keys = "ubuntu:${file("id_rsa.pub")}"
   }
 }
 
-resource "yandex_vpc_subnet" "foo" {
-  zone           = "ru-central1-a"
-  network_id     = "${yandex_vpc_network.foo.id}"
-  v4_cidr_blocks = ["10.5.0.0/24"]
+resource "local_file" "inventory" {
+    filename = "inventory.ini"
+    content = templatefile("inventory.ini.tftpl", { ip_addr = yandex_compute_instance.nginx.network_interface.0.nat_ip_address })
 }
-
-resource "yandex_vpc_network" "foo" {}
-
