@@ -46,8 +46,10 @@ resource yandex_compute_instance dz1 {
     }
   }
   provisioner local-exec {
-    command = "ansible-playbook -u ubuntu -i '${self.network_interface.0.nat_ip_address},' --private-key id_rsa playbook.yml"
+    command = "ansible-playbook -i '${self.network_interface.0.nat_ip_address},' playbook.yml"
     environment = {
+      ANSIBLE_REMOTE_USER: "ubuntu"
+      ANSIBLE_PRIVATE_KEY_FILE: "id_rsa"
       ANSIBLE_HOST_KEY_CHECKING: "False"
     }
   }
