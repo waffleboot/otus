@@ -11,15 +11,15 @@ provider yandex {
   zone = "ru-central1-a"
 }
 
-resource yandex_vpc_network nginx {}
+resource yandex_vpc_network dz1 {}
 
-resource yandex_vpc_subnet nginx {
-  network_id     = yandex_vpc_network.nginx.id
+resource yandex_vpc_subnet dz1 {
+  network_id     = yandex_vpc_network.dz1.id
   v4_cidr_blocks = ["192.168.0.0/16"]
   zone           = "ru-central1-a"
 }
 
-resource yandex_compute_instance nginx {
+resource yandex_compute_instance dz1 {
   resources {
     cores = 2
     memory = 4
@@ -30,7 +30,7 @@ resource yandex_compute_instance nginx {
     }
   }
   network_interface {
-    subnet_id = yandex_vpc_subnet.nginx.id
+    subnet_id = yandex_vpc_subnet.dz1.id
     nat = true
   }
   metadata = {
