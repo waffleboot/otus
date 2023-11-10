@@ -9,3 +9,7 @@ terraform apply
 ```bash
 terraform destroy
 ```
+
+## Скринтшот
+
+![](screenshot.png)
