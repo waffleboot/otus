@@ -34,11 +34,35 @@ resource "yandex_compute_instance" "nginx" {
     nat = true
   }
   metadata = {
-    ssh-keys = "ubuntu:${file("id_rsa.pub")}"
+    ssh-keys = "ubuntu:${tls_private_key.key.public_key_openssh}"
+  }
+  provisioner "remote-exec" {
+    inline = ["true"]
+    connection {
+      type = "ssh"
+      user = "ubuntu"
+      host = "${self.network_interface.0.nat_ip_address}"
+      private_key = "${tls_private_key.key.private_key_pem}"
+    }
+  }
+  provisioner "local-exec" {
+    command = "ansible-playbook -u ubuntu -i '${self.network_interface.0.nat_ip_address},' --private-key id_rsa playbook.yml"
+    environment = {
+      ANSIBLE_HOST_KEY_CHECKING = "False"
+    }
+  }
+  provisioner "local-exec" {
+    command = "curl http://${self.network_interface.0.nat_ip_address}"
   }
 }
 
-resource "local_file" "inventory" {
-    filename = "inventory.ini"
-    content = templatefile("inventory.ini.tftpl", { ip_addr = yandex_compute_instance.nginx.network_interface.0.nat_ip_address })
+resource "tls_private_key" "key" {
+  algorithm = "RSA"
+  rsa_bits = 4096
+  provisioner "local-exec" {
+    command = "echo '${self.private_key_pem}' > id_rsa"
+  }
+  provisioner "local-exec" {
+    command = "chmod og-rwx id_rsa"
+  }
 }
