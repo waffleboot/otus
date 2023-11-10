@@ -17,3 +17,4 @@ terraform destroy
 ## Полезные ссылки
 
 [Язык HCL](https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md)
+[Provisioners](https://github.com/hashicorp/terraform/tree/main/website/docs/language/resources/provisioners)
