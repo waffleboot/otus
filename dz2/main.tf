@@ -55,6 +55,25 @@ resource yandex_compute_instance server {
   }
 }
 
+resource yandex_compute_instance client {
+  resources {
+    cores = 2
+    memory = 4
+  }
+  boot_disk {
+    initialize_params {
+        image_id = "fd826honb8s0i1jtt6cg"
+    }
+  }
+  network_interface {
+    subnet_id = yandex_vpc_subnet.dz2.id
+    nat = false
+  }
+  metadata = {
+    ssh-keys = "ubuntu:${tls_private_key.key.public_key_openssh}"
+  }
+}
+
 resource tls_private_key key {
   algorithm = "RSA"
   rsa_bits = 4096
