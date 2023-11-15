@@ -37,21 +37,22 @@ resource yandex_compute_instance server {
   }
   boot_disk {
     initialize_params {
-        image_id = "fd826honb8s0i1jtt6cg"
+        image_id = var.image_id
     }
   }
   network_interface {
     subnet_id = yandex_vpc_subnet.dz2.id
     nat = true
   }
+  hostname = "server"
   metadata = {
-    ssh-keys = "ubuntu:${tls_private_key.key.public_key_openssh}"
+    ssh-keys = "${var.user}:${tls_private_key.key.public_key_openssh}"
   }
   /*provisioner remote-exec {
     inline = ["true"]
     connection {
       type = "ssh"
-      user = "ubuntu"
+      user = var.user
       host = self.network_interface.0.nat_ip_address
       private_key = tls_private_key.key.private_key_pem
     }
@@ -59,7 +60,7 @@ resource yandex_compute_instance server {
   provisioner local-exec {
     command = "ansible-playbook -i '${self.network_interface.0.nat_ip_address},' playbook.yml"
     environment = {
-      ANSIBLE_REMOTE_USER: "ubuntu"
+      ANSIBLE_REMOTE_USER: var.user
       ANSIBLE_PRIVATE_KEY_FILE: "id_rsa"
       ANSIBLE_HOST_KEY_CHECKING: "False"
     }
@@ -73,15 +74,16 @@ resource yandex_compute_instance client {
   }
   boot_disk {
     initialize_params {
-        image_id = "fd826honb8s0i1jtt6cg"
+        image_id = var.image_id
     }
   }
   network_interface {
     subnet_id = yandex_vpc_subnet.dz2.id
     nat = false
   }
+  hostname = "client"
   metadata = {
-    ssh-keys = "ubuntu:${tls_private_key.key.public_key_openssh}"
+    ssh-keys = "${var.user}:${tls_private_key.key.public_key_openssh}"
   }
 }
 
