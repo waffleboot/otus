@@ -1,0 +1,33 @@
+---
+- name: Prepare server
+  become: true
+  hosts: server
+  tasks:
+    - ansible.builtin.hostname:
+        name: server
+    # - name: Install pacemaker, pcs, fence-agents
+    #   ansible.builtin.apt:
+    #     state: latest
+    #     pkg:
+    #       - pacemaker
+    #       - pcs
+    #       - fence-agents
+
+- name: Prepare clients
+  become: true
+  hosts: clients
+  tasks:
+    - ansible.builtin.hostname:
+        name: client
+    # - name: Install pacemaker, pcs, fence-agents
+    #   ansible.builtin.apt:
+    #     pkg:
+    #       - pacemaker
+    #       - pcs
+    #       - fence-agents
+    #     update_cache: yes
+    #     state: latest
+    # - name: Set hacluster password
+    #   ansible.builtin.user:
+    #     name: hacluster
+    #     password: hacluster

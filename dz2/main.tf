@@ -11,12 +11,23 @@ provider yandex {
   zone = "ru-central1-a"
 }
 
+resource yandex_vpc_gateway dz2 {}
+
 resource yandex_vpc_network dz2 {}
 
 resource yandex_vpc_subnet dz2 {
   network_id     = yandex_vpc_network.dz2.id
   v4_cidr_blocks = ["192.168.0.0/16"]
   zone           = "ru-central1-a"
+  route_table_id = yandex_vpc_route_table.dz2.id
+}
+
+resource yandex_vpc_route_table dz2 {
+  network_id = yandex_vpc_network.dz2.id
+  static_route {
+    destination_prefix = "0.0.0.0/0"
+    gateway_id         = yandex_vpc_gateway.dz2.id
+  }
 }
 
 resource yandex_compute_instance server {
@@ -36,7 +47,7 @@ resource yandex_compute_instance server {
   metadata = {
     ssh-keys = "ubuntu:${tls_private_key.key.public_key_openssh}"
   }
-  provisioner remote-exec {
+  /*provisioner remote-exec {
     inline = ["true"]
     connection {
       type = "ssh"
@@ -52,7 +63,7 @@ resource yandex_compute_instance server {
       ANSIBLE_PRIVATE_KEY_FILE: "id_rsa"
       ANSIBLE_HOST_KEY_CHECKING: "False"
     }
-  }
+  }*/
 }
 
 resource yandex_compute_instance client {
