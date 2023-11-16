@@ -41,6 +41,14 @@
           - iscsi-initiator-utils
           - lvm2-cluster
           - gfs2-utils
+
+    - command: cat /etc/iscsi/initiatorname.iscsi
+      register: initiatorname
+    - name: Grant access
+      command: "targetcli /iscsi/{{ target }}/tpg1/acls create {{ initiatorname.stdout.split('InitiatorName=').1 }}"
+      delegate_to: "{{ server }}"
+      ignore_errors: true
+
     - name: Start pacemaker
       ansible.builtin.systemd:
         name: pcsd
@@ -62,13 +70,6 @@
 
     - name: Discover target
       command: iscsiadm -m discovery -t st -p server.ru-central1.internal
-
-    - command: cat /etc/iscsi/initiatorname.iscsi
-      register: initiatorname
-    - name: Grant access
-      command: "targetcli /iscsi/{{ target }}/tpg1/acls create {{ initiatorname.stdout.split('InitiatorName=').1 }}"
-      delegate_to: "{{ server }}"
-      ignore_errors: true
 
     - name: Start iscsi
       ansible.builtin.systemd:
@@ -118,11 +119,11 @@
       ignore_errors: true
 
     - name: Add order constraint
-      command: pcs constraint order start clvmd-clone then clusterfs-clone --force
+      command: pcs constraint order start clvmd-clone then clusterfs-clone
       ignore_errors: true
 
     - name: Add colocation constraint
-      command: pcs constraint colocation add clusterfs-clone with clvmd-clone --force
+      command: pcs constraint colocation add clusterfs-clone with clvmd-clone
       ignore_errors: true
 
 - hosts: server
