@@ -100,11 +100,9 @@
   tasks:
     - name: Create dlm
       command: pcs resource create dlm systemd:dlm op monitor interval=30s on-fail=ignore clone interleave=true ordered=true
-      when: false
 
     - name: Create clvmd
       command: pcs resource create clvmd ocf:heartbeat:clvm op monitor interval=30s on-fail=ignore clone interleave=true ordered=true
-      when: false
 
     - name: Create volume group
       ansible.builtin.lvg:
