@@ -48,23 +48,6 @@ resource yandex_compute_instance server {
   metadata = {
     ssh-keys = "${var.user}:${tls_private_key.key.public_key_openssh}"
   }
-  /*provisioner remote-exec {
-    inline = ["true"]
-    connection {
-      type = "ssh"
-      user = var.user
-      host = self.network_interface.0.nat_ip_address
-      private_key = tls_private_key.key.private_key_pem
-    }
-  }
-  provisioner local-exec {
-    command = "ansible-playbook -i '${self.network_interface.0.nat_ip_address},' playbook.yml"
-    environment = {
-      ANSIBLE_REMOTE_USER: var.user
-      ANSIBLE_PRIVATE_KEY_FILE: "id_rsa"
-      ANSIBLE_HOST_KEY_CHECKING: "False"
-    }
-  }*/
 }
 
 resource yandex_compute_instance client {
@@ -96,4 +79,30 @@ resource tls_private_key key {
   provisioner local-exec {
     command = "chmod og-rwx id_rsa"
   }
+}
+
+resource local_file inventory-ini {
+  content = templatefile("inventory.tftpl",{
+    user = var.user
+    client_ip = local.client_ip
+    server_ip = local.server_ip
+  })
+  filename = "inventory.ini"
+  provisioner remote-exec {
+    inline = ["true"]
+    connection {
+      type = "ssh"
+      user = var.user
+      host = local.server_ip
+      private_key = tls_private_key.key.private_key_pem
+    }
+  }
+  provisioner local-exec {
+    command = "ansible-playbook -i inventory.ini playbook.yml"
+    environment = {
+      ANSIBLE_REMOTE_USER: var.user
+      ANSIBLE_PRIVATE_KEY_FILE: "id_rsa"
+      ANSIBLE_HOST_KEY_CHECKING: "False"
+    }
+  } 
 }

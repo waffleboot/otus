@@ -1,0 +1,8 @@
+[server]
+${server_ip}
+
+[clients]
+${client_ip}
+
+[clients:vars]
+ansible_ssh_common_args='-oProxyCommand="ssh -W %h:%p -q -i id_rsa ${user}@${server_ip}" -i id_rsa'
