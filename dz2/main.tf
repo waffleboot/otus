@@ -38,9 +38,6 @@ resource yandex_compute_instance dz2 {
     node1 = {
       nat = false
     }
-    node2 = {
-      nat = false
-    }
   }
   resources {
     cores = 2
