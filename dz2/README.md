@@ -169,3 +169,7 @@ server.ru-central1.internal : ok=9    changed=9    unreachable=0    failed=0    
 [Locals](https://developer.hashicorp.com/terraform/language/values/locals)  
 [VM Metadata](https://cloud.yandex.com/en-ru/docs/compute/concepts/vm-metadata)  
 [Templatefile](https://developer.hashicorp.com/terraform/language/functions/templatefile)  
+[Ansible Inventory](https://docs.ansible.com/ansible/latest/inventory_guide/intro_inventory.html)  
+[Ansible Bastion](https://www.jeffgeerling.com/blog/2022/using-ansible-playbook-ssh-bastion-jump-host)  
+[ssh port forwarding](https://habr.com/ru/articles/331348/)
+[Настройка mkfs.gfs2](https://www.altlinux.org/GFS2_%D0%BD%D0%B0_iSCSI_%D1%81_Multipath)  
