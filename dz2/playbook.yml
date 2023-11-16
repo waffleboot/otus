@@ -13,15 +13,16 @@
         state: latest
         pkg:
           - targetcli
+    - command: targetcli /iscsi delete {{ target }}
+      ignore_errors: true
+    - command: targetcli /backstores/fileio delete disk01
+      ignore_errors: true
     - name: Map disk
       command: targetcli /backstores/fileio create disk01 /var/run/disk
-      ignore_errors: true
     - name: Create target
       command: targetcli /iscsi create {{ target }}
-      ignore_errors: true
     - name: Create LUN
       command: targetcli /iscsi/{{ target }}/tpg1/luns create /backstores/fileio/disk01
-      ignore_errors: true
 
 - name: Prepare clients
   become: true
@@ -43,7 +44,6 @@
     - name: Grant access
       command: "targetcli /iscsi/{{ target }}/tpg1/acls create {{ initiatorname.stdout.split('InitiatorName=').1 }}"
       delegate_to: "{{ server }}"
-      ignore_errors: true
 
     - name: Start pacemaker
       ansible.builtin.systemd:
@@ -57,7 +57,7 @@
     - name: Auth to pcs
       command: pcs cluster auth {{ clients }} -u hacluster -p hacluster_pwd
     - name: Setup pcs
-      command: pcs cluster setup --name {{ pacemaker }} {{ clients }}
+      command: pcs cluster setup --force --name {{ pacemaker }} {{ clients }}
       ignore_errors: true
     - name: Enable pcs
       command: pcs cluster enable --all
@@ -80,15 +80,14 @@
     - name: Stop stonith
       command: pcs property set stonith-enabled=false
 
-    - name: Create DLM resource
+    - name: Create dlm
       command: pcs resource create dlm systemd:dlm op monitor interval=30s on-fail=ignore clone interleave=true ordered=true
       ignore_errors: true
 
     - command: pcs resource create clvmd ocf:heartbeat:clvm op monitor interval=30s on-fail=ignore clone interleave=true ordered=true
       ignore_errors: true
 
-    - command: pcs constraint order start dlm-clone then clvmd-clone
-      ignore_errors: true
+    - command: pcs constraint order start dlm-clone then clvmd-clone --force
 
     - name: Create volume group
       ansible.builtin.lvg:
@@ -115,12 +114,10 @@
       ignore_errors: true
 
     - name: Add order constraint
-      command: pcs constraint order start clvmd-clone then clusterfs-clone
-      ignore_errors: true
+      command: pcs constraint order start clvmd-clone then clusterfs-clone --force
 
     - name: Add colocation constraint
-      command: pcs constraint colocation add clusterfs-clone with clvmd-clone
-      ignore_errors: true
+      command: pcs constraint colocation add clusterfs-clone with clvmd-clone --force
 
 - hosts: server
   gather_facts: no
