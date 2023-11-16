@@ -1,6 +1,6 @@
 ---
-- become: true
-  hosts: server
+- hosts: server
+  become: true
   gather_facts: no
   tasks:
     - name: Create file
@@ -23,8 +23,8 @@
     - name: Create LUN
       command: targetcli /iscsi/{{ target }}/tpg1/luns create /backstores/fileio/disk01
 
-- become: true
-  hosts: clients
+- hosts: clients
+  become: true
   gather_facts: no
   tasks:
     - name: Install pacemaker
@@ -47,8 +47,8 @@
         name: hacluster
         password: $6$mysecretsalt$2PO0ANor95BEjI5Df1m7NeKkzF1s5xkb7wvuJKdQc59S1fY0JQcHadoT0wRjIhCDVcOTzkR8DDkmxn1rurx5w1
 
-- become: true
-  hosts: admin
+- hosts: admin
+  become: true
   gather_facts: no
   tasks:
     - name: Auth to pcs
@@ -63,8 +63,8 @@
     - name: Stop stonith
       command: pcs property set stonith-enabled=false
 
-- become: true
-  hosts: clients
+- hosts: clients
+  become: true
   gather_facts: no
   tasks:
     - name: Discover target
@@ -94,8 +94,8 @@
         content: "{{ output.stdout }}"
       delegate_to: localhost
 
-- become: true
-  hosts: admin
+- hosts: admin
+  become: true
   gather_facts: no
   tasks:
     - name: Create dlm
@@ -136,3 +136,14 @@
 
     - name: Add colocation constraint
       command: pcs constraint colocation add clusterfs-clone with clvmd-clone
+
+- hosts: admin
+  gather_facts: no
+  tasks:
+    - command: pcs status
+      become: true
+      register: output
+    - ansible.builtin.copy:
+        dest: /home/otus/otus/dz2/pcs.txt
+        content: "{{ output.stdout }}"
+      delegate_to: localhost
