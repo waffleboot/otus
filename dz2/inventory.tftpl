@@ -4,6 +4,9 @@ ansible_ssh_private_key_file=id_rsa
 target=iqn.2018-09.ru.otus:storage.target00
 pacemaker=otuscluster
 
+[admin]
+${clients.0}
+
 [server]
 ${public_ip}
 

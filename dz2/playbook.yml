@@ -1,6 +1,5 @@
 ---
-- name: Prepare server
-  become: true
+- become: true
   hosts: server
   gather_facts: no
   tasks:
@@ -24,8 +23,7 @@
     - name: Create LUN
       command: targetcli /iscsi/{{ target }}/tpg1/luns create /backstores/fileio/disk01
 
-- name: Prepare clients
-  become: true
+- become: true
   hosts: clients
   gather_facts: no
   tasks:
@@ -39,12 +37,6 @@
           - lvm2-cluster
           - gfs2-utils
 
-    - command: cat /etc/iscsi/initiatorname.iscsi
-      register: initiatorname
-    - name: Grant access
-      command: "targetcli /iscsi/{{ target }}/tpg1/acls create {{ initiatorname.stdout.split('InitiatorName=').1 }}"
-      delegate_to: "{{ server }}"
-
     - name: Start pacemaker
       ansible.builtin.systemd:
         name: pcsd
@@ -54,40 +46,63 @@
       ansible.builtin.user:
         name: hacluster
         password: $6$mysecretsalt$2PO0ANor95BEjI5Df1m7NeKkzF1s5xkb7wvuJKdQc59S1fY0JQcHadoT0wRjIhCDVcOTzkR8DDkmxn1rurx5w1
+
+- become: true
+  hosts: admin
+  gather_facts: no
+  tasks:
     - name: Auth to pcs
       command: pcs cluster auth {{ clients }} -u hacluster -p hacluster_pwd
     - name: Setup pcs
-      command: pcs cluster setup --force --name {{ pacemaker }} {{ clients }}
+      command: pcs cluster setup --name {{ pacemaker }} {{ clients }}
       ignore_errors: true
     - name: Enable pcs
       command: pcs cluster enable --all
     - name: Start pcs
       command: pcs cluster start --all
+    - name: Stop stonith
+      command: pcs property set stonith-enabled=false
 
+- become: true
+  hosts: clients
+  gather_facts: no
+  tasks:
     - name: Discover target
       command: iscsiadm -m discovery -t st -p server.ru-central1.internal
-
+    - command: cat /etc/iscsi/initiatorname.iscsi
+      register: initiatorname
+    - name: Grant access
+      command: "targetcli /iscsi/{{ target }}/tpg1/acls create {{ initiatorname.stdout.split('InitiatorName=').1 }}"
+      delegate_to: "{{ server }}"
     - name: Start iscsi
       ansible.builtin.systemd:
         name: iscsi
         state: started
         enabled: true
         daemon-reload: true
-
     - name: Login to target
       command: iscsiadm -m node -l -T {{ target }}
 
-    - name: Stop stonith
-      command: pcs property set stonith-enabled=false
+- hosts: server
+  gather_facts: no
+  tasks:
+    - command: targetcli ls
+      register: output
+      become: true
+    - ansible.builtin.copy:
+        dest: /home/otus/otus/dz2/targetcli.txt
+        content: "{{ output.stdout }}"
+      delegate_to: localhost
 
+- become: true
+  hosts: admin
+  gather_facts: no
+  tasks:
     - name: Create dlm
       command: pcs resource create dlm systemd:dlm op monitor interval=30s on-fail=ignore clone interleave=true ordered=true
-      ignore_errors: true
 
-    - command: pcs resource create clvmd ocf:heartbeat:clvm op monitor interval=30s on-fail=ignore clone interleave=true ordered=true
-      ignore_errors: true
-
-    - command: pcs constraint order start dlm-clone then clvmd-clone --force
+    - name: Create clvmd
+      command: pcs resource create clvmd ocf:heartbeat:clvm op monitor interval=30s on-fail=ignore clone interleave=true ordered=true
 
     - name: Create volume group
       ansible.builtin.lvg:
@@ -114,18 +129,10 @@
       ignore_errors: true
 
     - name: Add order constraint
-      command: pcs constraint order start clvmd-clone then clusterfs-clone --force
+      command: pcs constraint order start dlm-clone then clvmd-clone
+
+    - name: Add order constraint
+      command: pcs constraint order start clvmd-clone then clusterfs-clone
 
     - name: Add colocation constraint
-      command: pcs constraint colocation add clusterfs-clone with clvmd-clone --force
-
-- hosts: server
-  gather_facts: no
-  tasks:
-    - command: targetcli ls
-      register: output
-      become: true
-    - ansible.builtin.copy:
-        dest: /home/otus/otus/dz2/targetcli.txt
-        content: "{{ output.stdout }}"
-      delegate_to: localhost
+      command: pcs constraint colocation add clusterfs-clone with clvmd-clone
