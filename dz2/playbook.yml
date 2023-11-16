@@ -13,10 +13,6 @@
         state: latest
         pkg:
           - targetcli
-    - command: targetcli /iscsi delete {{ target }}
-      ignore_errors: true
-    - command: targetcli /backstores/fileio delete disk01
-      ignore_errors: true
     - name: Map disk
       command: targetcli /backstores/fileio create disk01 /var/run/disk
       ignore_errors: true
