@@ -55,7 +55,6 @@
       command: pcs cluster auth {{ clients }} -u hacluster -p hacluster_pwd
     - name: Setup pcs
       command: pcs cluster setup --name {{ pacemaker }} {{ clients }}
-      ignore_errors: true
     - name: Enable pcs
       command: pcs cluster enable --all
     - name: Start pcs

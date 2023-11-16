@@ -1,8 +1,8 @@
 Cluster name: otuscluster
 Stack: corosync
 Current DC: node1.ru-central1.internal (version 1.1.23-1.el7_9.1-9acf116022) - partition with quorum
-Last updated: Thu Nov 16 23:25:01 2023
-Last change: Thu Nov 16 23:25:01 2023 by root via cibadmin on node1.ru-central1.internal
+Last updated: Thu Nov 16 23:50:40 2023
+Last change: Thu Nov 16 23:50:39 2023 by root via cibadmin on node1.ru-central1.internal
 
 3 nodes configured
 9 resource instances configured
