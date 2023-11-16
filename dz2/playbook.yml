@@ -13,7 +13,7 @@
         state: latest
         pkg:
           - targetcli
-    - command: targetcli /iscsi delete iqn.2018-09.ru.otus:storage.target00
+    - command: targetcli /iscsi delete {{ target }}
       ignore_errors: true
     - command: targetcli /backstores/fileio delete disk01
       ignore_errors: true
@@ -21,10 +21,10 @@
       command: targetcli /backstores/fileio create disk01 /var/run/disk
       ignore_errors: true
     - name: Create target
-      command: targetcli /iscsi create iqn.2018-09.ru.otus:storage.target00
+      command: targetcli /iscsi create {{ target }}
       ignore_errors: true
     - name: Create LUN
-      command: targetcli /iscsi/iqn.2018-09.ru.otus:storage.target00/tpg1/luns create /backstores/fileio/disk01
+      command: targetcli /iscsi/{{ target }}/tpg1/luns create /backstores/fileio/disk01
       ignore_errors: true
 
 - name: Prepare clients
@@ -53,7 +53,7 @@
     - name: Auth to pcs
       command: pcs cluster auth {{ clients }} -u hacluster -p hacluster_pwd
     - name: Setup pcs
-      command: pcs cluster setup --name otuscluster {{ clients }}
+      command: pcs cluster setup --name {{ pacemaker }} {{ clients }}
       ignore_errors: true
     - name: Enable pcs
       command: pcs cluster enable --all
@@ -66,7 +66,7 @@
     - command: cat /etc/iscsi/initiatorname.iscsi
       register: initiatorname
     - name: Grant access
-      command: "targetcli /iscsi/iqn.2018-09.ru.otus:storage.target00/tpg1/acls create {{ initiatorname.stdout.split('InitiatorName=').1 }}"
+      command: "targetcli /iscsi/{{ target }}/tpg1/acls create {{ initiatorname.stdout.split('InitiatorName=').1 }}"
       delegate_to: "{{ server }}"
       ignore_errors: true
 
@@ -78,7 +78,7 @@
         daemon-reload: true
 
     - name: Login to target
-      command: iscsiadm -m node -l -T iqn.2018-09.ru.otus:storage.target00
+      command: iscsiadm -m node -l -T {{ target }}
 
     - name: Stop stonith
       command: pcs property set stonith-enabled=false
@@ -110,7 +110,7 @@
         state: present
 
     - name: Format filesystem
-      command: mkfs.gfs2 -O -j3 -p lock_dlm -t otuscluster:gfs2 /dev/cluster_vg/cluster_lv
+      command: mkfs.gfs2 -O -j3 -p lock_dlm -t {{ pacemaker }}:gfs2 /dev/cluster_vg/cluster_lv
       ignore_errors: true
 
     - name: Mount filesystem
