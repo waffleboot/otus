@@ -2,14 +2,27 @@
 - name: Prepare server
   become: true
   hosts: server
-  tasks: []
-    # - name: Install pacemaker, pcs, fence-agents
-    #   ansible.builtin.apt:
-    #     state: latest
-    #     pkg:
-    #       - pacemaker
-    #       - pcs
-    #       - fence-agents
+  tasks:
+    - ansible.builtin.yum:
+        name:
+          - targetcli
+      tags:
+        - install
+    # - ansible.buildin.command: dd if=/dev/zero of=/var/run/disk bs=1024K count=1024
+    # - ansible.builtin.command: targetcli /backstores/fileio create disk01 /var/run/disk
+    # - ansible.builtin.command: targetcli /iscsi create iqn.2018-09.ru.otus:storage.target00
+    # - ansible.builtin.command: targetcli /iscsi/iqn.2018-09.ru.otus:storage.target00/tpg1/luns create /backstores/fileio/disk01
+    # - command: targetcli /iscsi/iqn.2018-09.ru.otus:storage.target00/tpg1/acls create iqn.1994-05.com.redhat:b0ecaff7d91d
+
+    - name: Install pacemaker, pcs, fence-agents
+      ansible.builtin.apt:
+        state: latest
+        pkg:
+          - pacemaker
+          - pcs
+          - fence-agents
+      tags:
+        - install
 
 - name: Prepare clients
   become: true
@@ -21,6 +34,8 @@
           - pacemaker
           - pcs
           - fence-agents-all
+      tags:
+        - install
     - ansible.builtin.systemd:
         name: pcsd.service
         state: started
@@ -37,3 +52,18 @@
       command: pcs cluster enable --all
     - name: Start pcs
       command: pcs cluster start --all
+
+    - name: Install iscsiadm
+      ansible.builtin.yum:
+        name:
+          - iscsi-initiator-utils
+      tags:
+        - install
+    - command: iscsiadm -m discovery -t st -p 192.168.0.7
+    - ansible.builtin.systemd:
+        name: iscsi
+        enabled: true
+        daemon-reload: true
+      tags:
+        - init
+    - command: iscsiadm -m node -l -T iqn.2018-09.ru.otus:storage.target00
