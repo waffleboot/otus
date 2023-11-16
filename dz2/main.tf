@@ -30,7 +30,18 @@ resource yandex_vpc_route_table dz2 {
   }
 }
 
-resource yandex_compute_instance server {
+resource yandex_compute_instance dz2 {
+  for_each = {
+    server = {
+      nat = true
+    }
+    node1 = {
+      nat = false
+    }
+    node2 = {
+      nat = false
+    }
+  }
   resources {
     cores = 2
     memory = 4
@@ -42,29 +53,10 @@ resource yandex_compute_instance server {
   }
   network_interface {
     subnet_id = yandex_vpc_subnet.dz2.id
-    nat = true
+    nat = each.value.nat
   }
-  hostname = "server"
-  metadata = {
-    ssh-keys = "${var.user}:${tls_private_key.key.public_key_openssh}"
-  }
-}
-
-resource yandex_compute_instance client {
-  resources {
-    cores = 2
-    memory = 4
-  }
-  boot_disk {
-    initialize_params {
-        image_id = var.image_id
-    }
-  }
-  network_interface {
-    subnet_id = yandex_vpc_subnet.dz2.id
-    nat = false
-  }
-  hostname = "client"
+  name = each.key
+  hostname = each.key
   metadata = {
     ssh-keys = "${var.user}:${tls_private_key.key.public_key_openssh}"
   }
@@ -84,8 +76,9 @@ resource tls_private_key key {
 resource local_file inventory-ini {
   content = templatefile("inventory.tftpl",{
     user = var.user
-    client_ip = local.client_ip
-    server_ip = local.server_ip
+    client_ips = local.client_ips
+    server_ip  = local.server_ip
+    clients    = local.clients
   })
   filename = "inventory.ini"
   provisioner remote-exec {

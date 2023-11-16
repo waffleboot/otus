@@ -2,7 +2,10 @@
 ${server_ip}
 
 [clients]
-${client_ip}
+%{ for addr in client_ips ~}
+${addr}
+%{ endfor ~}
 
 [clients:vars]
 ansible_ssh_common_args='-oProxyCommand="ssh -W %h:%p -q -i id_rsa ${user}@${server_ip}" -i id_rsa'
+clients='${join(" ",clients)}'
