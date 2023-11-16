@@ -3,27 +3,24 @@
   become: true
   hosts: server
   tasks:
-    - ansible.builtin.yum:
-        name:
-          - targetcli
-      tags:
-        - install
-    # - ansible.buildin.command: dd if=/dev/zero of=/var/run/disk bs=1024K count=1024
-    # - ansible.builtin.command: targetcli /backstores/fileio create disk01 /var/run/disk
-    # - ansible.builtin.command: targetcli /iscsi create iqn.2018-09.ru.otus:storage.target00
-    # - ansible.builtin.command: targetcli /iscsi/iqn.2018-09.ru.otus:storage.target00/tpg1/luns create /backstores/fileio/disk01
-    # - command: targetcli /iscsi/iqn.2018-09.ru.otus:storage.target00/tpg1/acls create iqn.1994-05.com.redhat:b0ecaff7d91d
-
-    - name: Install pacemaker, pcs, fence-agents
-      ansible.builtin.apt:
+    - name: Install targetcli
+      ansible.builtin.yum:
         state: latest
         pkg:
-          - pacemaker
-          - pcs
-          - fence-agents
-      tags:
-        - install
-
+          - targetcli
+    - name: Create file
+      community.general.filesize:
+        path: /var/run/disk
+        size: 1G
+    - name: Map disk
+      command: targetcli /backstores/fileio create disk01 /var/run/disk
+      ignore_errors: true
+    - name: Create target
+      command: targetcli /iscsi create iqn.2018-09.ru.otus:storage.target00
+      ignore_errors: true
+    - name: Create LUN
+      command: targetcli /iscsi/iqn.2018-09.ru.otus:storage.target00/tpg1/luns create /backstores/fileio/disk01
+      ignore_errors: true
 - name: Prepare clients
   become: true
   hosts: clients
@@ -34,10 +31,10 @@
           - pacemaker
           - pcs
           - fence-agents-all
-      tags:
-        - install
-    - ansible.builtin.systemd:
-        name: pcsd.service
+          - iscsi-initiator-utils
+    - name: Start pacemaker
+      ansible.builtin.systemd:
+        name: pcsd
         state: started
         enabled: true
     - name: Set hacluster password
@@ -48,22 +45,32 @@
       command: pcs cluster auth {{ clients }} -u hacluster -p hacluster_pwd
     - name: Setup pcs
       command: pcs cluster setup --name otuscluster {{ clients }}
+      ignore_errors: true
     - name: Enable pcs
       command: pcs cluster enable --all
     - name: Start pcs
       command: pcs cluster start --all
 
-    - name: Install iscsiadm
-      ansible.builtin.yum:
-        name:
-          - iscsi-initiator-utils
-      tags:
-        - install
-    - command: iscsiadm -m discovery -t st -p 192.168.0.7
-    - ansible.builtin.systemd:
+    - name: Discover target
+      command: iscsiadm -m discovery -t st -p server.ru-central1.internal
+
+    - name: Set initiatorname
+      ansible.builtin.copy:
+        dest: /etc/iscsi/initiatorname.iscsi
+        content: |
+          InitiatorName=iqn.1994-05.com.redhat:{{ ansible_hostname }}
+
+    - name: Grant access
+      command: targetcli /iscsi/iqn.2018-09.ru.otus:storage.target00/tpg1/acls create iqn.1994-05.com.redhat:{{ ansible_hostname }}
+      delegate_to: "{{ server }}"
+      ignore_errors: true
+
+    - name: Start iscsi
+      ansible.builtin.systemd:
         name: iscsi
+        state: started
         enabled: true
         daemon-reload: true
-      tags:
-        - init
-    - command: iscsiadm -m node -l -T iqn.2018-09.ru.otus:storage.target00
+
+    - name: Login to target
+      command: iscsiadm -m node -l -T iqn.2018-09.ru.otus:storage.target00
