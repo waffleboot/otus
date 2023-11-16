@@ -2,6 +2,7 @@
 - name: Prepare server
   become: true
   hosts: server
+  gather_facts: no
   tasks:
     - name: Create file
       community.general.filesize:
@@ -29,18 +30,17 @@
 - name: Grant access
   become: true
   hosts: clients
+  gather_facts: no
   tasks:
-    - name: Set initiatorname
-      ansible.builtin.copy:
-        dest: /etc/iscsi/initiatorname.iscsi
-        content: >
-          InitiatorName=iqn.1994-05.com.redhat:{{ ansible_hostname }}
+    - command: cat /etc/iscsi/initiatorname.iscsi
+      register: initiatorname
     - name: Grant access
-      command: targetcli /iscsi/iqn.2018-09.ru.otus:storage.target00/tpg1/acls create iqn.1994-05.com.redhat:{{ ansible_hostname }}
+      command: "targetcli /iscsi/iqn.2018-09.ru.otus:storage.target00/tpg1/acls create {{ initiatorname.stdout.split('InitiatorName=').1 }}"
       delegate_to: "{{ server }}"
       ignore_errors: true
 
 - hosts: server
+  gather_facts: no
   tasks:
     - command: targetcli ls
       register: output
@@ -53,6 +53,7 @@
 - name: Prepare clients
   become: true
   hosts: clients
+  gather_facts: no
   tasks:
     - name: Install pacemaker
       ansible.builtin.yum:

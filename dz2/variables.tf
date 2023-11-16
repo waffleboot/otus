@@ -19,5 +19,8 @@ variable nodes {
         node1 = {
             nat = false
         }
+        node2 = {
+            nat = false
+        }
     }
 }
