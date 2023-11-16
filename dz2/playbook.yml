@@ -27,29 +27,6 @@
       command: targetcli /iscsi/iqn.2018-09.ru.otus:storage.target00/tpg1/luns create /backstores/fileio/disk01
       ignore_errors: true
 
-- name: Grant access
-  become: true
-  hosts: clients
-  gather_facts: no
-  tasks:
-    - command: cat /etc/iscsi/initiatorname.iscsi
-      register: initiatorname
-    - name: Grant access
-      command: "targetcli /iscsi/iqn.2018-09.ru.otus:storage.target00/tpg1/acls create {{ initiatorname.stdout.split('InitiatorName=').1 }}"
-      delegate_to: "{{ server }}"
-      ignore_errors: true
-
-- hosts: server
-  gather_facts: no
-  tasks:
-    - command: targetcli ls
-      register: output
-      become: true
-    - ansible.builtin.copy:
-        dest: /home/otus/otus/dz2/targetcli.txt
-        content: "{{ output.stdout }}"
-      delegate_to: localhost
-
 - name: Prepare clients
   become: true
   hosts: clients
@@ -86,10 +63,17 @@
     - name: Discover target
       command: iscsiadm -m discovery -t st -p server.ru-central1.internal
 
+    - command: cat /etc/iscsi/initiatorname.iscsi
+      register: initiatorname
+    - name: Grant access
+      command: "targetcli /iscsi/iqn.2018-09.ru.otus:storage.target00/tpg1/acls create {{ initiatorname.stdout.split('InitiatorName=').1 }}"
+      delegate_to: "{{ server }}"
+      ignore_errors: true
+
     - name: Start iscsi
       ansible.builtin.systemd:
         name: iscsi
-        state: restarted
+        state: started
         enabled: true
         daemon-reload: true
 
@@ -134,9 +118,20 @@
       ignore_errors: true
 
     - name: Add order constraint
-      command: pcs constraint order start clvmd-clone then clusterfs-clone
+      command: pcs constraint order start clvmd-clone then clusterfs-clone --force
       ignore_errors: true
 
     - name: Add colocation constraint
-      command: pcs constraint colocation add clusterfs-clone with clvmd-clone
+      command: pcs constraint colocation add clusterfs-clone with clvmd-clone --force
       ignore_errors: true
+
+- hosts: server
+  gather_facts: no
+  tasks:
+    - command: targetcli ls
+      register: output
+      become: true
+    - ansible.builtin.copy:
+        dest: /home/otus/otus/dz2/targetcli.txt
+        content: "{{ output.stdout }}"
+      delegate_to: localhost
