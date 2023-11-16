@@ -73,17 +73,16 @@ resource tls_private_key key {
 resource local_file inventory-ini {
   content = templatefile("inventory.tftpl",{
     user = var.user
-    client_ips = local.client_ips
-    server_ip  = local.server_ip
+    public_ip  = local.public_ip
     clients    = local.clients
   })
   filename = "inventory.ini"
-  provisioner remote-exec {
+  /*provisioner remote-exec {
     inline = ["true"]
     connection {
       type = "ssh"
       user = var.user
-      host = local.server_ip
+      host = local.public_ip
       private_key = tls_private_key.key.private_key_pem
     }
   }
@@ -94,5 +93,5 @@ resource local_file inventory-ini {
       ANSIBLE_PRIVATE_KEY_FILE: "id_rsa"
       ANSIBLE_HOST_KEY_CHECKING: "False"
     }
-  } 
+  }*/
 }

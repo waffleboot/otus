@@ -3,13 +3,14 @@ ansible_user=${user}
 ansible_ssh_private_key_file=id_rsa
 
 [server]
-${server_ip}
+${public_ip}
 
 [clients]
-%{ for addr in client_ips ~}
+%{ for addr in clients ~}
 ${addr}
 %{ endfor ~}
 
 [clients:vars]
-ansible_ssh_common_args='-oProxyCommand="ssh -W %h:%p -q -i id_rsa ${user}@${server_ip}" -i id_rsa'
+ansible_ssh_common_args='-oProxyCommand="ssh -W %h:%p -q -i id_rsa ${user}@${public_ip}" -i id_rsa'
 clients='${join(" ",clients)}'
+server=${public_ip}
