@@ -31,14 +31,7 @@ resource yandex_vpc_route_table dz2 {
 }
 
 resource yandex_compute_instance dz2 {
-  for_each = {
-    server = {
-      nat = true
-    }
-    node1 = {
-      nat = false
-    }
-  }
+  for_each = var.nodes
   resources {
     cores = 2
     memory = 4
@@ -77,7 +70,7 @@ resource local_file inventory-ini {
     clients    = local.clients
   })
   filename = "inventory.ini"
-  /*provisioner remote-exec {
+  provisioner remote-exec {
     inline = ["true"]
     connection {
       type = "ssh"
@@ -86,7 +79,7 @@ resource local_file inventory-ini {
       private_key = tls_private_key.key.private_key_pem
     }
   }
-  provisioner local-exec {
+  /*provisioner local-exec {
     command = "ansible-playbook -i inventory.ini playbook.yml"
     environment = {
       ANSIBLE_REMOTE_USER: var.user
