@@ -1,3 +1,5 @@
+.DEFAULT_GOAL := run
+
 .PHONY: build
 build:
 	@docker build -t otus .
