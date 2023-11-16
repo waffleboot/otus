@@ -110,6 +110,10 @@
         vg_options: -Ay -cy
         pvs: /dev/sda
         state: present
+      retries: 3
+      delay: 3
+      register: result
+      until: result.rc == 0
 
     - name: Create logical volume
       ansible.builtin.lvol:
