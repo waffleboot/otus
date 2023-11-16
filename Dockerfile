@@ -10,7 +10,7 @@ RUN useradd -ms /bin/bash otus
 USER otus
 WORKDIR /home/otus
 
-COPY .terraformrc /home/otus
+COPY .terraformrc init.sh .
 
 RUN curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
 
