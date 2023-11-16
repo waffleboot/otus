@@ -17,3 +17,9 @@ ${server}
 %{ for addr in clients ~}
 ${addr}
 %{ endfor ~}
+
+[src]
+${clients.0}
+
+[dst]
+${clients.1}

@@ -100,9 +100,11 @@
   tasks:
     - name: Create dlm
       command: pcs resource create dlm systemd:dlm op monitor interval=30s on-fail=ignore clone interleave=true ordered=true
+      when: false
 
     - name: Create clvmd
       command: pcs resource create clvmd ocf:heartbeat:clvm op monitor interval=30s on-fail=ignore clone interleave=true ordered=true
+      when: false
 
     - name: Create volume group
       ansible.builtin.lvg:
@@ -110,10 +112,10 @@
         vg_options: -Ay -cy
         pvs: /dev/sda
         state: present
-      retries: 3
-      delay: 3
       register: result
-      until: result.rc == 0
+      retries: 3
+      delay: 10
+      until: result is not failed
 
     - name: Create logical volume
       ansible.builtin.lvol:
@@ -151,3 +153,20 @@
         dest: /home/otus/otus/dz2/pcs.txt
         content: "{{ output.stdout }}"
       delegate_to: localhost
+
+- hosts: src
+  become: true
+  gather_facts: no
+  tasks:
+    - ansible.builtin.copy: 
+        dest: /mnt/gfs2/test.txt
+        content: 123456
+
+- hosts: dst
+  become: true
+  gather_facts: no
+  tasks:
+    - command: cat /mnt/gfs2/test.txt
+      register: output
+    - debug:
+        msg: "{{ output.stdout }}"
