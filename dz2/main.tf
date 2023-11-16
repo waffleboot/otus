@@ -66,6 +66,7 @@ resource tls_private_key key {
 resource local_file inventory-ini {
   content = templatefile("inventory.tftpl",{
     user = var.user
+    server     = local.server
     public_ip  = local.public_ip
     clients    = local.clients
   })
@@ -81,10 +82,5 @@ resource local_file inventory-ini {
   }
   /*provisioner local-exec {
     command = "ansible-playbook -i inventory.ini playbook.yml"
-    environment = {
-      ANSIBLE_REMOTE_USER: var.user
-      ANSIBLE_PRIVATE_KEY_FILE: "id_rsa"
-      ANSIBLE_HOST_KEY_CHECKING: "False"
-    }
   }*/
 }
