@@ -3,15 +3,19 @@
   become: true
   hosts: server
   tasks:
+    - name: Create file
+      community.general.filesize:
+        path: /var/run/disk
+        size: 1G
     - name: Install targetcli
       ansible.builtin.yum:
         state: latest
         pkg:
           - targetcli
-    - name: Create file
-      community.general.filesize:
-        path: /var/run/disk
-        size: 1G
+    - command: targetcli /iscsi delete iqn.2018-09.ru.otus:storage.target00
+      ignore_errors: true
+    - command: targetcli /backstores/fileio delete disk01
+      ignore_errors: true
     - name: Map disk
       command: targetcli /backstores/fileio create disk01 /var/run/disk
       ignore_errors: true
@@ -21,6 +25,31 @@
     - name: Create LUN
       command: targetcli /iscsi/iqn.2018-09.ru.otus:storage.target00/tpg1/luns create /backstores/fileio/disk01
       ignore_errors: true
+
+- name: Grant access
+  become: true
+  hosts: clients
+  tasks:
+    - name: Set initiatorname
+      ansible.builtin.copy:
+        dest: /etc/iscsi/initiatorname.iscsi
+        content: >
+          InitiatorName=iqn.1994-05.com.redhat:{{ ansible_hostname }}
+    - name: Grant access
+      command: targetcli /iscsi/iqn.2018-09.ru.otus:storage.target00/tpg1/acls create iqn.1994-05.com.redhat:{{ ansible_hostname }}
+      delegate_to: "{{ server }}"
+      ignore_errors: true
+
+- hosts: server
+  tasks:
+    - command: targetcli ls
+      register: output
+      become: true
+    - ansible.builtin.copy:
+        dest: /home/otus/otus/dz2/targetcli.txt
+        content: "{{ output.stdout }}"
+      delegate_to: localhost
+
 - name: Prepare clients
   become: true
   hosts: clients
@@ -28,8 +57,8 @@
     - name: Install pacemaker
       ansible.builtin.yum:
         name:
-          - pacemaker
           - pcs
+          - pacemaker
           - fence-agents-all
           - iscsi-initiator-utils
           - lvm2-cluster
@@ -56,21 +85,10 @@
     - name: Discover target
       command: iscsiadm -m discovery -t st -p server.ru-central1.internal
 
-    - name: Set initiatorname
-      ansible.builtin.copy:
-        dest: /etc/iscsi/initiatorname.iscsi
-        content: |
-          InitiatorName=iqn.1994-05.com.redhat:{{ ansible_hostname }}
-
-    - name: Grant access
-      command: targetcli /iscsi/iqn.2018-09.ru.otus:storage.target00/tpg1/acls create iqn.1994-05.com.redhat:{{ ansible_hostname }}
-      delegate_to: "{{ server }}"
-      ignore_errors: true
-
     - name: Start iscsi
       ansible.builtin.systemd:
         name: iscsi
-        state: started
+        state: restarted
         enabled: true
         daemon-reload: true
 
