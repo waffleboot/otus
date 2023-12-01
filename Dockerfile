@@ -2,7 +2,7 @@ FROM ubuntu:20.04
 
 RUN apt update && apt install -y vim curl wget unzip ansible
 
-RUN ansible-galaxy collection install community.general
+RUN ansible-galaxy collection install community.general ansible.posix
 
 RUN wget https://hashicorp-releases.yandexcloud.net/terraform/1.6.3/terraform_1.6.3_linux_arm64.zip && \
     unzip terraform_1.6.3_linux_arm64.zip -d /usr/bin && rm terraform_1.6.3_linux_arm64.zip

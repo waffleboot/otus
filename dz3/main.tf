@@ -11,26 +11,26 @@ provider yandex {
   zone = "ru-central1-a"
 }
 
-resource yandex_vpc_gateway dz3 {}
+resource yandex_vpc_network net {}
 
-resource yandex_vpc_network dz3 {}
-
-resource yandex_vpc_subnet dz3 {
-  network_id     = yandex_vpc_network.dz3.id
+resource yandex_vpc_subnet subnet {
+  network_id     = yandex_vpc_network.net.id
   v4_cidr_blocks = ["192.168.0.0/16"]
   zone           = "ru-central1-a"
-  route_table_id = yandex_vpc_route_table.dz3.id
+  route_table_id = yandex_vpc_route_table.rt.id
 }
 
-resource yandex_vpc_route_table dz3 {
-  network_id = yandex_vpc_network.dz3.id
+resource yandex_vpc_gateway nat_gateway {}
+
+resource yandex_vpc_route_table rt {
+  network_id = yandex_vpc_network.net.id
   static_route {
     destination_prefix = "0.0.0.0/0"
-    gateway_id         = yandex_vpc_gateway.dz3.id
+    gateway_id         = yandex_vpc_gateway.nat_gateway.id
   }
 }
 
-resource yandex_compute_instance dz3 {
+resource yandex_compute_instance my-instance {
   for_each = var.nodes
   resources {
     cores = 2
@@ -42,7 +42,7 @@ resource yandex_compute_instance dz3 {
     }
   }
   network_interface {
-    subnet_id = yandex_vpc_subnet.dz3.id
+    subnet_id = yandex_vpc_subnet.subnet.id
     nat = each.value.nat
   }
   name = each.key
