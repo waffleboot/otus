@@ -48,7 +48,7 @@ resource yandex_compute_instance dz3 {
   name = each.key
   hostname = each.key
   metadata = {
-    ssh-keys = "${var.user}:${tls_private_key.key.public_key_openssh}"
+    ssh-keys = "${var.ssh_user}:${tls_private_key.key.public_key_openssh}"
   }
 }
 
@@ -65,18 +65,16 @@ resource tls_private_key key {
 
 resource local_file inventory-ini {
   content = templatefile("inventory.tftpl",{
-    user = var.user
-    server     = local.server
-    public_ip  = local.public_ip
-    clients    = local.clients
+    bastion  = local.bastion
+    ssh_user = var.ssh_user
   })
   filename = "inventory.ini"
   provisioner remote-exec {
     inline = ["true"]
     connection {
       type = "ssh"
-      user = var.user
-      host = local.public_ip
+      user = var.ssh_user
+      host = local.bastion
       private_key = tls_private_key.key.private_key_pem
     }
   }
