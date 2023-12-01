@@ -46,3 +46,8 @@ Terraform и ansible роль для развертывания серверов
 - VRRP это про отказоустойчивость, HAProxy про балансировку
 - файл конфигурации keepalived /etc/keepalived/keepalived.conf
 - systemctl enable start keepalived
+
+[Устройство сети в Yandex Cloud](https://cloud.yandex.ru/docs/overview/concepts/network)  
+[Deckhouse](https://deckhouse.ru/documentation/v1/modules/450-keepalived/examples.html)  
+[Резервирование маршрутизатора с использованием протокола VRRP](https://procloud.ru/blog/cases/rezervirovanie-marshrutizatora-s-ispolzovaniem-protokola-vrrp/)  
+[репо с курса](https://github.com/Nickmob/vagrant-ansible-haproxy-keepalived)  
