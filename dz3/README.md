@@ -54,3 +54,5 @@ Terraform и ansible роль для развертывания серверов
 [Deckhouse](https://deckhouse.ru/documentation/v1/modules/450-keepalived/examples.html)  
 [Резервирование маршрутизатора с использованием протокола VRRP](https://procloud.ru/blog/cases/rezervirovanie-marshrutizatora-s-ispolzovaniem-protokola-vrrp/)  
 [репо с курса](https://github.com/Nickmob/vagrant-ansible-haproxy-keepalived)  
+
+GOOS=linux GOARCH=amd64 go build -o app main.go

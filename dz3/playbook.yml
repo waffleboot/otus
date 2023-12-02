@@ -1,23 +1,122 @@
----
-- hosts: nginx
+# ---
+# - hosts: nginx
+#   become: true
+#   gather_facts: no
+#   tasks:
+#     - name: install keepalived
+#       ansible.builtin.yum:
+#         update_cache: yes
+#         name:
+#           - keepalived
+#     - name: sysctl
+#       ansible.posix.sysctl:
+#         name: net.ipv4.ip_nonlocal_bind
+#         value: '1'
+#         state: present
+#     - ansible.builtin.copy:
+#         dest: /etc/keepalived/keepalived.conf
+#         content: |
+#           vrrp_instance VI_1 {
+#             state {{ keepalived_state }}
+#             interface eth0
+#             virtual_router_id 51
+#             priority 100
+#             virtual_ipaddress {
+#               10.0.26.80
+#             }
+#           }
+#     - ansible.builtin.systemd:
+#         name: keepalived
+#         state: started
+#         enabled: yes
+
 - hosts: db
   become: true
   gather_facts: no
   tasks:
-    - ansible.builtin.yum:
-        name: 
-          - https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-          - https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
-    - name: install postgresql
-      ansible.builtin.yum:
-        name: postgresql15-server
+    # - ansible.builtin.yum:
+    #     name: 
+    #       - https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    #       - https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+    # - name: install postgresql
+    #   ansible.builtin.yum:
+    #     name: postgresql15-server
+    - name: stop postgresql
+      ansible.builtin.systemd:
+        name: postgresql-15
+        state: stopped
+      tags:
+        - never
+        - uninstall
     - ansible.builtin.file:
         path: /var/lib/pgsql/15/data/
         state: absent
+      tags:
+        - never
+        - uninstall
     - name: initdb
       command: /usr/pgsql-15/bin/postgresql-15-setup initdb
+
+    - ansible.builtin.lineinfile:
+        dest: /var/lib/pgsql/15/data/postgresql.conf
+        regexp: listen_addresses
+        line: listen_addresses = '0.0.0.0'
+
+    - ansible.builtin.lineinfile:
+        dest: /var/lib/pgsql/15/data/pg_hba.conf
+        regexp: 'host    all             all             127.0.0.1/32            scram-sha-256'
+        line:   'host    all             all             0.0.0.0/0               scram-sha-256'
+
     - name: start postgresql
       ansible.builtin.systemd:
         name: postgresql-15
         state: started
         enabled: yes
+    - name: create role and database
+      become_user: postgres
+      command: psql
+      args:
+        stdin: |
+          create role app with login password 'app_password';
+          create database app_database;
+    - ansible.builtin.copy:
+        src: backend/app
+        dest: /usr/local/bin
+        owner: centos
+        group: centos
+        mode: '0744'
+    - ansible.builtin.copy:
+        dest: /etc/systemd/system/app.service
+        content: |
+          [Service]
+          ExecStart=/usr/local/bin/app
+    - name: start app
+      ansible.builtin.systemd:
+        name: app
+        state: restarted
+        enabled: yes
+    - ansible.builtin.uri:
+        url: http://localhost:8080/
+
+- hosts: backend
+  become: true
+  gather_facts: no
+  tasks:
+    - ansible.builtin.copy:
+        src: backend/app
+        dest: /usr/local/bin
+        owner: centos
+        group: centos
+        mode: '0744'
+    - ansible.builtin.copy:
+        dest: /etc/systemd/system/app.service
+        content: |
+          [Service]
+          ExecStart=/usr/local/bin/app
+    - name: start app
+      ansible.builtin.systemd:
+        name: app
+        state: restarted
+        enabled: yes
+    - ansible.builtin.uri:
+        url: http://localhost:8080/

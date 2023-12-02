@@ -16,20 +16,20 @@ variable nodes {
         bastion = {
             nat = true
         }
-        nginx-1 = {
+//      nginx-1 = {
+//          nat = false
+//      }
+//      nginx-2 = {
+//          nat = false
+//      }
+//      backend-1 = {
+//          nat = false
+//      }
+//      backend-2 = {
+//          nat = false
+//      }
+        db = {
             nat = false
         }
-        nginx-2 = {
-            nat = false
-        }
-//        backend-1 = {
-//            nat = false
-//        }
-//        backend-2 = {
-//            nat = false
-//        }
-//        db = {
-//            nat = false
-//        }
     }
 }
