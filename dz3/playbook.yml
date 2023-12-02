@@ -34,13 +34,14 @@
   become: true
   gather_facts: no
   tasks:
-    # - ansible.builtin.yum:
-    #     name: 
-    #       - https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-    #       - https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
-    # - name: install postgresql
-    #   ansible.builtin.yum:
-    #     name: postgresql15-server
+    - name: add postgresql yum repo
+      ansible.builtin.yum:
+        name:
+          - https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+          - https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+    - name: install postgresql
+      ansible.builtin.yum:
+        name: postgresql15-server
     - name: stop postgresql
       ansible.builtin.systemd:
         name: postgresql-15
@@ -56,17 +57,14 @@
         - uninstall
     - name: initdb
       command: /usr/pgsql-15/bin/postgresql-15-setup initdb
-
     - ansible.builtin.lineinfile:
         dest: /var/lib/pgsql/15/data/postgresql.conf
         regexp: listen_addresses
         line: listen_addresses = '0.0.0.0'
-
     - ansible.builtin.lineinfile:
         dest: /var/lib/pgsql/15/data/pg_hba.conf
         regexp: 'host    all             all             127.0.0.1/32            scram-sha-256'
         line:   'host    all             all             0.0.0.0/0               scram-sha-256'
-
     - name: start postgresql
       ansible.builtin.systemd:
         name: postgresql-15
@@ -77,32 +75,15 @@
       command: psql
       args:
         stdin: |
-          create role app with login password 'app_password';
-          create database app_database;
-    - ansible.builtin.copy:
-        src: backend/app
-        dest: /usr/local/bin
-        owner: centos
-        group: centos
-        mode: '0744'
-    - ansible.builtin.copy:
-        dest: /etc/systemd/system/app.service
-        content: |
-          [Service]
-          ExecStart=/usr/local/bin/app
-    - name: start app
-      ansible.builtin.systemd:
-        name: app
-        state: restarted
-        enabled: yes
-    - ansible.builtin.uri:
-        url: http://localhost:8080/
+          create role {{app_role}} with login password '{{app_password}}';
+          create database {{app_database}};
 
 - hosts: backend
   become: true
   gather_facts: no
   tasks:
-    - ansible.builtin.copy:
+    - name: copy app
+      ansible.builtin.copy:
         src: backend/app
         dest: /usr/local/bin
         owner: centos
@@ -112,11 +93,12 @@
         dest: /etc/systemd/system/app.service
         content: |
           [Service]
-          ExecStart=/usr/local/bin/app
+          ExecStart=/usr/local/bin/app '{{conn_str}}' '{{http_port}}'
     - name: start app
       ansible.builtin.systemd:
         name: app
         state: restarted
         enabled: yes
-    - ansible.builtin.uri:
-        url: http://localhost:8080/
+    - name: check app
+      ansible.builtin.uri:
+        url: http://localhost:{{http_port}}/

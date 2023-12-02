@@ -3,13 +3,22 @@ ansible_user=${ssh_user}
 ansible_ssh_private_key_file=id_rsa
 ansible_ssh_common_args='-oProxyCommand="ssh -o StrictHostKeyChecking=accept-new -W %h:%p -q -i id_rsa ${ssh_user}@${bastion}" -i id_rsa -o StrictHostKeyChecking=accept-new'
 
-[nginx]
-nginx-1.ru-central1.internal keepalived_state=MASTER
-nginx-2.ru-central1.internal keepalived_state=BACKUP
+[db]
+db.ru-central1.internal
+
+[db:vars]
+app_role=app
+app_password=app_password
+app_database=app_database
 
 [backend]
 backend-1.ru-central1.internal
 backend-2.ru-central1.internal
 
-[db]
-db.ru-central1.internal
+[backend:vars]
+conn_str=postgres://app:app_password@db.ru-central1.internal:5432/app_database
+http_port=8080
+
+[nginx]
+nginx-1.ru-central1.internal keepalived_state=MASTER
+nginx-2.ru-central1.internal keepalived_state=BACKUP

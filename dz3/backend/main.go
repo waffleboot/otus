@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -14,16 +15,24 @@ import (
 )
 
 func main() {
+	if len(os.Args) < 3 {
+		fmt.Println("app <dbUrl> <httpPort>")
+		os.Exit(1)
+	}
+
+	dbUrl := os.Args[1]
+	httpPort := os.Args[2]
+
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer cancel()
 
-	err := run(ctx, ":8080", "postgres://app:app_password@db.ru-central1.internal:5432/app_database")
+	err := run(ctx, dbUrl, httpPort)
 	if err != nil {
 		fmt.Println(err)
 	}
 }
 
-func run(ctx context.Context, httpAddr, dbUrl string) error {
+func run(ctx context.Context, dbUrl, httpPort string) error {
 	dbpool, err := initPostgres(ctx, dbUrl)
 	if err != nil {
 		return fmt.Errorf("init postgres: %w", err)
@@ -31,7 +40,7 @@ func run(ctx context.Context, httpAddr, dbUrl string) error {
 	defer dbpool.Close()
 
 	server := &http.Server{
-		Addr:    httpAddr,
+		Addr:    ":" + httpPort,
 		Handler: httpHandler(dbpool),
 	}
 
