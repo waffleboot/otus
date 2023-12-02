@@ -82,6 +82,9 @@
   become: true
   gather_facts: no
   tasks:
+    - ansible.builtin.file:
+        path: '{{static_dir}}'
+        state: directory
     - name: copy app
       ansible.builtin.copy:
         src: backend/app
@@ -93,12 +96,13 @@
         dest: /etc/systemd/system/app.service
         content: |
           [Service]
-          ExecStart=/usr/local/bin/app '{{conn_str}}' '{{http_port}}'
+          ExecStart=/usr/local/bin/app '{{conn_str}}' '{{http_port}}' '{{static_dir}}'
     - name: start app
       ansible.builtin.systemd:
         name: app
         state: restarted
+        daemon_reload: yes
         enabled: yes
     - name: check app
       ansible.builtin.uri:
-        url: http://localhost:{{http_port}}/
+        url: http://localhost:{{http_port}}

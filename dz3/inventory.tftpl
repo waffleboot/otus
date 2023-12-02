@@ -18,6 +18,7 @@ backend-2.ru-central1.internal
 [backend:vars]
 conn_str=postgres://app:app_password@db.ru-central1.internal:5432/app_database
 http_port=8080
+static_dir=/var/run/app/static
 
 [nginx]
 nginx-1.ru-central1.internal keepalived_state=MASTER
