@@ -79,3 +79,7 @@ resource local_file inventory-ini {
     }
   }
 }
+
+output "bastion" {
+  value = local.bastion
+}
