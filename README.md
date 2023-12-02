@@ -18,4 +18,4 @@ export YC_FOLDER_ID=$(yc config get folder-id)
 [A Comprehensive Guide to Testing in Terraform: Keep your tests, validations, checks, and policies in order](https://mattias.engineer/posts/terraform-testing-and-validation/)  
 [список образов](https://cloud.yandex.com/en-ru/docs/compute/operations/images-with-pre-installed-software/get-list)
 
-TODO: добавить ссылку на yandex cloud
+https://console.cloud.yandex.ru/folders/b1ggpb09qp65jor0hag8
