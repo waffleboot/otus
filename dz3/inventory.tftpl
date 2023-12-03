@@ -6,19 +6,18 @@ ansible_ssh_common_args='-oProxyCommand="ssh -o StrictHostKeyChecking=accept-new
 [db]
 db.ru-central1.internal
 
-[db:vars]
-app_role=app
-app_password=app_password
-app_database=app_database
-
 [backend]
 backend-1.ru-central1.internal
 backend-2.ru-central1.internal
 
 [backend:vars]
-conn_str=postgres://app:app_password@db.ru-central1.internal:5432/app_database
-http_port=8080
+WORDPRESS_DB_HOST=db.ru-central1.internal
+WORDPRESS_DB_NAME=wordpress_db
+WORDPRESS_DB_USER=wordpress_user
+WORDPRESS_DB_PASSWORD=wordpress_password
+
 static_dir=/var/run/app/static
+http_port=8080
 
 [nginx]
 nginx-1.ru-central1.internal keepalived_state=MASTER
