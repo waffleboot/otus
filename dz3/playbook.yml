@@ -31,78 +31,47 @@
 #         enabled: yes
 
 - hosts: db
-  become: true
   gather_facts: no
   tasks:
-    - name: add postgresql yum repo
-      ansible.builtin.yum:
-        name:
-          - https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-          - https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
-    - name: install postgresql
-      ansible.builtin.yum:
-        name: postgresql15-server
-    - name: stop postgresql
-      ansible.builtin.systemd:
-        name: postgresql-15
-        state: stopped
-      tags:
-        - never
-        - uninstall
-    - ansible.builtin.file:
-        path: /var/lib/pgsql/15/data/
-        state: absent
-      tags:
-        - never
-        - uninstall
-    - name: initdb
-      command: /usr/pgsql-15/bin/postgresql-15-setup initdb
-    - ansible.builtin.lineinfile:
-        dest: /var/lib/pgsql/15/data/postgresql.conf
-        regexp: listen_addresses
-        line: listen_addresses = '0.0.0.0'
-    - ansible.builtin.lineinfile:
-        dest: /var/lib/pgsql/15/data/pg_hba.conf
-        regexp: 'host    all             all             127.0.0.1/32            scram-sha-256'
-        line:   'host    all             all             0.0.0.0/0               scram-sha-256'
-    - name: start postgresql
-      ansible.builtin.systemd:
-        name: postgresql-15
-        state: started
-        enabled: yes
-    - name: create role and database
-      become_user: postgres
-      command: psql
-      args:
-        stdin: |
-          create role {{app_role}} with login password '{{app_password}}';
-          create database {{app_database}};
+    - ansible.builtin.command: ansible-galaxy install geerlingguy.mysql -p roles
+      delegate_to: localhost
+
+- hosts: db
+  become: yes
+  vars_files:
+    - vars/main.yml
+  roles:
+    - geerlingguy.mysql
 
 - hosts: backend
   become: true
   gather_facts: no
   tasks:
-    - ansible.builtin.file:
-        path: '{{static_dir}}'
-        state: directory
-    - name: copy app
-      ansible.builtin.copy:
-        src: backend/app
-        dest: /usr/local/bin
-        owner: centos
-        group: centos
-        mode: '0744'
-    - ansible.builtin.copy:
-        dest: /etc/systemd/system/app.service
-        content: |
-          [Service]
-          ExecStart=/usr/local/bin/app '{{conn_str}}' '{{http_port}}' '{{static_dir}}'
-    - name: start app
+    - ansible.builtin.command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+    - name: install docker
+      ansible.builtin.yum:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+    - name: start docker service
       ansible.builtin.systemd:
-        name: app
-        state: restarted
-        daemon_reload: yes
+        name: docker
+        state: started
         enabled: yes
-    - name: check app
-      ansible.builtin.uri:
-        url: http://localhost:{{http_port}}
+    - ansible.builtin.command: docker stop wordpress
+      tags:
+        - never
+        - uninstall
+    - ansible.builtin.command: docker rm wordpress
+      tags:
+        - never
+        - uninstall
+    - name: docker run wordpress
+      ansible.builtin.command: >
+        docker run --name wordpress -p {{http_port}}:80 --restart always -d
+        -e WORDPRESS_DB_HOST={{WORDPRESS_DB_HOST}} -e WORDPRESS_DB_NAME={{WORDPRESS_DB_NAME}}
+        -e WORDPRESS_DB_USER={{WORDPRESS_DB_USER}} -e WORDPRESS_DB_PASSWORD={{WORDPRESS_DB_PASSWORD}}
+        wordpress
