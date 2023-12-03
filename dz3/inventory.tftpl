@@ -3,6 +3,11 @@ ansible_user=${ssh_user}
 ansible_ssh_private_key_file=id_rsa
 ansible_ssh_common_args='-oProxyCommand="ssh -o StrictHostKeyChecking=accept-new -W %h:%p -q -i id_rsa ${ssh_user}@${bastion}" -i id_rsa -o StrictHostKeyChecking=accept-new'
 
+WORDPRESS_DB_HOST=db.ru-central1.internal
+WORDPRESS_DB_NAME=wordpress_db
+WORDPRESS_DB_USER=wordpress_user
+WORDPRESS_DB_PASSWORD=z83lv2EEIdNn
+
 [db]
 db.ru-central1.internal
 
@@ -11,11 +16,6 @@ backend-1.ru-central1.internal
 backend-2.ru-central1.internal
 
 [backend:vars]
-WORDPRESS_DB_HOST=db.ru-central1.internal
-WORDPRESS_DB_NAME=wordpress_db
-WORDPRESS_DB_USER=wordpress_user
-WORDPRESS_DB_PASSWORD=wordpress_password
-
 static_dir=/var/run/app/static
 http_port=8080
 
