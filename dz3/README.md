@@ -58,6 +58,20 @@ Terraform и ansible роль для развертывания серверов
 
 https://www.project-open.com/en/howto-postgresql-port-secure-remote-access
 https://info.gosuslugi.ru/articles/%D0%A0%D0%B0%D0%B7%D0%BC%D0%B5%D1%89%D0%B5%D0%BD%D0%B8%D0%B5_%D0%A1%D0%A3%D0%91%D0%94_PostgreSQL_%D0%BD%D0%B0_%D0%BE%D1%82%D0%B4%D0%B5%D0%BB%D1%8C%D0%BD%D0%BE%D0%BC_%D0%BE%D1%82_%D0%B0%D0%B4%D0%B0%D0%BF%D1%82%D0%B5%D1%80%D0%B0_CentOS_%D1%81%D0%B5%D1%80%D0%B2%D0%B5%D1%80%D0%B5/
-
+https://computingforgeeks.com/how-to-install-postgresql-on-centos-rhel-7/
+https://hub.docker.com/_/wordpress
+https://docs.docker.com/network/network-tutorial-host/
+https://docs.docker.com/config/containers/start-containers-automatically/
+https://www.techtransit.org/install-mysql-database-server-through-ansible-playbook/
+https://copyprogramming.com/howto/install-and-configure-mysql-using-ansible
+https://www.digitalocean.com/community/tutorials/how-to-install-wordpress-on-centos-7
+https://github.com/geerlingguy/ansible-role-mysql
+https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html
+https://docs.ansible.com/ansible/latest/reference_appendices/config.html
+https://askubuntu.com/questions/883404/pip-install-is-not-installing-executables-in-usr-local-bin
+https://stackoverflow.com/questions/65225803/ansible-ec2-no-such-file-or-directory-bssh-bssh
+https://stackoverflow.com/questions/1559955/host-xxx-xx-xxx-xxx-is-not-allowed-to-connect-to-this-mysql-server
+https://docs.docker.com/config/daemon/systemd/
+https://docs.docker.com/engine/install/centos/#install-using-the-repository
 
 GOOS=linux GOARCH=amd64 go build -o app main.go
