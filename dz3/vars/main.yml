@@ -1,0 +1,10 @@
+mysql_root_password: super-secure-password
+mysql_databases:
+  - name: wordpress_db
+    encoding: latin1
+    collation: latin1_general_ci
+mysql_users:
+  - name: wordpress_user
+    host: "%"
+    password: wordpress_password
+    priv: "wordpress_db.*:ALL"
