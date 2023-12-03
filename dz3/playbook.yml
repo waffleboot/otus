@@ -65,7 +65,7 @@
           - containerd.io
           - docker-buildx-plugin
           - docker-compose-plugin
-    - name: start docker service
+    - name: start docker
       ansible.builtin.systemd:
         name: docker
         state: started
@@ -78,7 +78,7 @@
       tags:
         - never
         - uninstall
-    - name: docker run wordpress
+    - name: run wordpress
       ansible.builtin.command: >
         docker run --name wordpress -p {{http_port}}:80 --restart always -d
         -e WORDPRESS_DB_HOST={{WORDPRESS_DB_HOST}} -e WORDPRESS_DB_NAME={{WORDPRESS_DB_NAME}}
