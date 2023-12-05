@@ -5,6 +5,7 @@ tf alias
 ```
 
 ```
+# cписок образов
 yc compute image list --folder-id standard-images
 ```
 

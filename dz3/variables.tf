@@ -1,11 +1,11 @@
 variable image_id {
     type = string
-    default = "fd80hokdubc6pj50kvsd"
+    default = "fd81v7g3b2g481h03tsp"
 }
 
 variable ssh_user {
     type = string
-    default = "centos"
+    default = "almalinux"
 }
 
 variable nodes {
