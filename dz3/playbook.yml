@@ -30,57 +30,69 @@
 #         state: started
 #         enabled: yes
 
-- hosts: db
-  gather_facts: no
-  tasks:
-    - ansible.builtin.command: ansible-galaxy install geerlingguy.mysql -p roles
-      delegate_to: localhost
+# - hosts: db
+#   gather_facts: no
+#   tasks:
+#     - ansible.builtin.command: ansible-galaxy install geerlingguy.mysql -p roles
+#       delegate_to: localhost
 
-- hosts: db
+# - hosts: db
+#   become: yes
+#   vars:
+#     mysql_root_password: super-secure-password
+#     mysql_databases:
+#       - name: "{{WORDPRESS_DB_NAME}}"
+#         encoding: latin1
+#         collation: latin1_general_ci
+#     mysql_users:
+#       - name: "{{WORDPRESS_DB_USER}}"
+#         host: "%"
+#         password: "{{WORDPRESS_DB_PASSWORD}}"
+#         priv: "wordpress_db.*:ALL"
+#   roles:
+#     - geerlingguy.mysql
+
+# - hosts: backend
+#   become: true
+#   gather_facts: no
+#   tasks:
+#     - ansible.builtin.command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+#     - name: install docker
+#       ansible.builtin.yum:
+#         name:
+#           - docker-ce
+#           - docker-ce-cli
+#           - containerd.io
+#           - docker-buildx-plugin
+#           - docker-compose-plugin
+#     - name: start docker
+#       ansible.builtin.systemd:
+#         name: docker
+#         state: started
+#         enabled: yes
+#     - ansible.builtin.command: docker stop wordpress
+#       tags:
+#         - never
+#         - uninstall
+#     - ansible.builtin.command: docker rm wordpress
+#       tags:
+#         - never
+#         - uninstall
+#     - name: run wordpress
+#       ansible.builtin.command: >
+#         docker run --name wordpress -p {{http_port}}:80 --restart always -d
+#         -e WORDPRESS_DB_HOST={{WORDPRESS_DB_HOST}} -e WORDPRESS_DB_NAME={{WORDPRESS_DB_NAME}}
+#         -e WORDPRESS_DB_USER={{WORDPRESS_DB_USER}} -e WORDPRESS_DB_PASSWORD={{WORDPRESS_DB_PASSWORD}}
+#         wordpress
+
+- hosts: nginx
   become: yes
-  vars:
-    mysql_root_password: super-secure-password
-    mysql_databases:
-      - name: "{{WORDPRESS_DB_NAME}}"
-        encoding: latin1
-        collation: latin1_general_ci
-    mysql_users:
-      - name: "{{WORDPRESS_DB_USER}}"
-        host: "%"
-        password: "{{WORDPRESS_DB_PASSWORD}}"
-        priv: "wordpress_db.*:ALL"
-  roles:
-    - geerlingguy.mysql
-
-- hosts: backend
-  become: true
   gather_facts: no
   tasks:
-    - ansible.builtin.command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-    - name: install docker
-      ansible.builtin.yum:
-        name:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
-          - docker-buildx-plugin
-          - docker-compose-plugin
-    - name: start docker
-      ansible.builtin.systemd:
-        name: docker
+    - ansible.builtin.yum:
+        update_cache: yes
+        name: nginx
+    - ansible.builtin.systemd:
+        name: nginx
         state: started
         enabled: yes
-    - ansible.builtin.command: docker stop wordpress
-      tags:
-        - never
-        - uninstall
-    - ansible.builtin.command: docker rm wordpress
-      tags:
-        - never
-        - uninstall
-    - name: run wordpress
-      ansible.builtin.command: >
-        docker run --name wordpress -p {{http_port}}:80 --restart always -d
-        -e WORDPRESS_DB_HOST={{WORDPRESS_DB_HOST}} -e WORDPRESS_DB_NAME={{WORDPRESS_DB_NAME}}
-        -e WORDPRESS_DB_USER={{WORDPRESS_DB_USER}} -e WORDPRESS_DB_PASSWORD={{WORDPRESS_DB_PASSWORD}}
-        wordpress
