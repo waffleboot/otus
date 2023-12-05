@@ -4,17 +4,27 @@
 
 # Цель:
 
-Terraform и ansible роль для развертывания серверов веб приложения под высокую нагрузку и отказоустойчивость.
+Terraform (или vagrant) и ansible роль для развертывания серверов веб приложения под высокую нагрузку и отказоустойчивость
 
 В работе должны применяться:
 
-- keepalived
+- keepalived, (в случае использовать vagrant и virtualbox), load balancer от yandex в случае использования яндекс клауд
 - nginx,
 - uwsgi/unicorn/php-fpm
 - некластеризованная бд mysql/mongodb/postgres/redis
-- gfs2
 
-Должна быть реализована:
+# Описание/Пошаговая инструкция выполнения домашнего задания:
+
+- Создать несколько инстансов с помощью терраформ (2 nginx, 2 backend, 1 db)
+- Развернуть nginx и keepalived на серверах nginx при помощи ansible
+- Развернуть бэкенд способный работать по uwsgi/unicorn/php-fpm и базой. (Можно взять что нибудь из Django) при помощи ansible.
+- Развернуть gfs2 для бэкенд серверах, для хранения статики
+- Развернуть бд для работы бэкенда при помощи ansbile
+- Проверить отказоустойчивость системы при выходе из строя серверов backend/nginx
+
+# Эти требования удалили
+
+# Должна быть реализована:
 
 - отказоустойчивость бэкенд и nginx серверов
 - отказоустойчивость сессий
@@ -25,15 +35,6 @@ Terraform и ansible роль для развертывания серверов
 - лимитов
 - настроек nginx
 - включением пулов соединений
-
-# Описание/Пошаговая инструкция выполнения домашнего задания:
-
-- Создать несколько инстансов с помощью терраформ (2 nginx, 2 backend, 1 db)
-- Развернуть nginx и keepalived на серверах nginx при помощи ansible
-- Развернуть бэкенд способный работать по uwsgi/unicorn/php-fpm и базой. (Можно взять что нибудь из Django) при помощи ansible.
-- Развернуть gfs2 для бэкенд серверах, для хранения статики
-- Развернуть бд для работы бэкенда при помощи ansbile
-- Проверить отказоустойчивость системы при выходе из строя серверов backend/nginx
 
 # План
 
@@ -73,5 +74,9 @@ https://stackoverflow.com/questions/65225803/ansible-ec2-no-such-file-or-directo
 https://stackoverflow.com/questions/1559955/host-xxx-xx-xxx-xxx-is-not-allowed-to-connect-to-this-mysql-server
 https://docs.docker.com/config/daemon/systemd/
 https://docs.docker.com/engine/install/centos/#install-using-the-repository
+[yandex lb address issue](https://github.com/yandex-cloud/terraform-provider-yandex/issues/114)
+[lb concepts](https://cloud.yandex.ru/docs/network-load-balancer/concepts/listener)
+[lb](https://terraform-provider.yandexcloud.net//Resources/lb_network_load_balancer)
+[listener](https://cloud.yandex.com/en-ru/docs/network-load-balancer/concepts/listener)
 
 GOOS=linux GOARCH=amd64 go build -o app main.go
