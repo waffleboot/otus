@@ -30,6 +30,38 @@ resource yandex_vpc_route_table rt {
   }
 }
 
+resource yandex_lb_network_load_balancer load_balancer {
+  type = "internal"
+  listener {
+    name = "nginx"
+    port = var.load_balancer.port
+    internal_address_spec {
+      subnet_id = yandex_vpc_subnet.subnet.id
+      address = var.load_balancer.addr
+    }
+  }
+  attached_target_group {
+    target_group_id = yandex_lb_target_group.target_group.id
+    healthcheck {
+      name = "http"
+      http_options {
+        port = 80
+      }
+    }
+  }
+}
+
+resource yandex_lb_target_group target_group {
+  target {
+    subnet_id = yandex_vpc_subnet.subnet.id
+    address = "192.168.0.21"
+  }
+  target {
+    subnet_id = yandex_vpc_subnet.subnet.id
+    address = "192.168.0.22"
+  }
+}
+
 resource yandex_compute_instance my-instance {
   for_each = var.nodes
   resources {
