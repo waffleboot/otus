@@ -78,5 +78,13 @@ https://docs.docker.com/engine/install/centos/#install-using-the-repository
 [lb concepts](https://cloud.yandex.ru/docs/network-load-balancer/concepts/listener)
 [lb](https://terraform-provider.yandexcloud.net//Resources/lb_network_load_balancer)
 [listener](https://cloud.yandex.com/en-ru/docs/network-load-balancer/concepts/listener)
+https://www.digitalocean.com/community/tutorials/how-to-install-wordpress-with-docker-compose-ru
+https://github.com/docker-library/wordpress/pull/142
+https://github.com/docker-library/wordpress/blob/master/wp-config-docker.php
+https://developer.wordpress.org/apis/wp-config-php/
+https://nginx.org/en/docs/http/ngx_http_upstream_module.html
+https://jodies.de/ipcalc?host=192.168.0.0&mask1=24&mask2=
+https://www.digitalocean.com/community/tutorials/nginx-access-logs-error-logs
+https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/
 
 GOOS=linux GOARCH=amd64 go build -o app main.go
