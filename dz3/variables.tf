@@ -8,6 +8,11 @@ variable ssh_user {
     default = "almalinux"
 }
 
+variable load_balancer_address {
+    type = string
+    default = "192.168.0.10"
+}
+
 variable nodes {
     type = map(object({
         ip_address = string

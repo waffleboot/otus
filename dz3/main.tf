@@ -37,7 +37,7 @@ resource yandex_lb_network_load_balancer load_balancer {
     port = 80
     internal_address_spec {
       subnet_id = yandex_vpc_subnet.subnet.id
-      address = "192.168.0.10"
+      address = var.load_balancer_address
     }
   }
   attached_target_group {
