@@ -69,8 +69,14 @@
         content: |
           events {}
           http {
+            upstream backend {
+              server backend-1.ru-central1.internal:8080;
+            }
             server {
               listen {{load_balancer_port}};
+              location / {
+                proxy_pass http://backend;
+              }
             }
           }
     - name: httpd_can_network_connect

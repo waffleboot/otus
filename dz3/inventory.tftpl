@@ -14,15 +14,14 @@ WORDPRESS_DB_NAME=wordpress_db
 WORDPRESS_DB_USER=wordpress_user
 WORDPRESS_DB_PASSWORD=z83lv2EEIdNn
 
+load_balancer_addr=${load_balancer_addr}
+load_balancer_port=${load_balancer_port}
+
 [db]
 db.ru-central1.internal
 
 [bastion]
 bastion.ru-central1.internal
-
-[bastion:vars]
-load_balancer_addr=${load_balancer_addr}
-load_balancer_port=${load_balancer_port}
 
 [backend]
 backend-1.ru-central1.internal
