@@ -20,13 +20,16 @@ db.ru-central1.internal
 [bastion]
 bastion.ru-central1.internal
 
+[bastion:vars]
+load_balancer_addr=${load_balancer_addr}
+load_balancer_port=${load_balancer_port}
+
 [backend]
 backend-1.ru-central1.internal
 ; backend-2.ru-central1.internal
 
 [backend:vars]
 static_dir=/var/run/app/static
-http_port=8080
 
 [nginx]
 nginx-1.ru-central1.internal

@@ -34,10 +34,10 @@ resource yandex_lb_network_load_balancer load_balancer {
   type = "internal"
   listener {
     name = "nginx"
-    port = 80
+    port = var.load_balancer.port
     internal_address_spec {
       subnet_id = yandex_vpc_subnet.subnet.id
-      address = var.load_balancer_address
+      address = var.load_balancer.addr
     }
   }
   attached_target_group {
@@ -100,6 +100,8 @@ resource local_file inventory-ini {
   content = templatefile("inventory.tftpl",{
     bastion  = local.bastion
     ssh_user = var.ssh_user
+    load_balancer_addr = var.load_balancer.addr
+    load_balancer_port = var.load_balancer.port
   })
   filename = "inventory.ini"
   provisioner remote-exec {

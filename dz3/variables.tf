@@ -8,9 +8,15 @@ variable ssh_user {
     default = "almalinux"
 }
 
-variable load_balancer_address {
-    type = string
-    default = "192.168.0.10"
+variable load_balancer {
+    type = object({
+        addr = string
+        port = number
+    })
+    default = {
+        addr = "192.168.0.254"
+        port = 8080
+    }
 }
 
 variable nodes {
@@ -19,7 +25,7 @@ variable nodes {
     }))
     default = {
         bastion = {
-            ip_address = "192.168.0.20"
+            ip_address = "192.168.0.10"
         }
         nginx-1 = {
             ip_address = "192.168.0.21"
@@ -28,13 +34,13 @@ variable nodes {
 //          ip_address = "192.168.0.22"
 //      }
         backend-1 = {
-            ip_address = "192.168.0.23"
+            ip_address = "192.168.0.31"
         }
 //      backend-2 = {
-//          ip_address = "192.168.0.24"
+//          ip_address = "192.168.0.32"
 //      }
         db = {
-            ip_address = "192.168.0.25"
+            ip_address = "192.168.0.41"
         }
     }
 }
