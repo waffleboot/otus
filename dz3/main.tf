@@ -75,8 +75,8 @@ resource yandex_compute_instance my-instance {
   }
   network_interface {
     subnet_id = yandex_vpc_subnet.subnet.id
-    nat = each.value.nat
     ip_address = each.value.ip_address
+    nat = each.key == "bastion"
   }
   name = each.key
   hostname = each.key
