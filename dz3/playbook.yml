@@ -13,7 +13,7 @@
         password: "{{WORDPRESS_DB_PASSWORD}}"
         priv: "wordpress_db.*:ALL"
   roles:
-    - geerlingguy.mysql
+    - role: geerlingguy.mysql
 
 - hosts: backend
   become: yes
@@ -42,22 +42,90 @@
       tags:
         - never
         - uninstall
-    - name: run wordpress
+    - name: start wordpress
       ansible.builtin.command: >
-        docker run --name wordpress -p {{http_port}}:80 --restart always -d
+        docker run --name wordpress -p 8080:80 --restart always -d
         -e WORDPRESS_DB_HOST={{WORDPRESS_DB_HOST}} -e WORDPRESS_DB_NAME={{WORDPRESS_DB_NAME}}
         -e WORDPRESS_DB_USER={{WORDPRESS_DB_USER}} -e WORDPRESS_DB_PASSWORD={{WORDPRESS_DB_PASSWORD}}
         wordpress
+    - name: check wordpress
+      ansible.builtin.uri:
+        url: http://backend-1.ru-central1.internal:8080
 
 - hosts: nginx
   become: yes
   gather_facts: no
-  roles:
-    - nginx
+  tasks:
+    - name: check backend
+      ansible.builtin.uri:
+        url: http://backend-1.ru-central1.internal:8080
+    - name: install nginx
+      ansible.builtin.yum:
+        update_cache: yes
+        name: nginx
+    - name: nginx.conf
+      ansible.builtin.copy:
+        dest: /etc/nginx/nginx.conf
+        content: |
+          events {}
+          http {
+            server {
+              listen {{load_balancer_port}};
+            }
+          }
+    - name: httpd_can_network_connect
+      ansible.builtin.command: setsebool -P httpd_can_network_connect 1
+    - name: start nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: started
+        enabled: yes
+    - name: reload nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: reloaded
+    - name: check nginx
+      ansible.builtin.uri:
+        url: http://nginx-1.ru-central1.internal:{{load_balancer_port}}
 
 - hosts: bastion
+  become: yes
   gather_facts: no
   tasks:
+    - name: check nginx
+      ansible.builtin.uri:
+        url: http://nginx-1.ru-central1.internal:{{load_balancer_port}}
     - name: check load balancer
       ansible.builtin.uri:
-        url: http://192.168.0.10
+        url: http://{{load_balancer_addr}}:{{load_balancer_port}}
+    - name: install nginx
+      ansible.builtin.yum:
+        update_cache: yes
+        name: nginx
+    - name: nginx.conf
+      ansible.builtin.copy:
+        dest: /etc/nginx/nginx.conf
+        content: |
+          events {}
+          http {
+            server {
+              listen 80;
+              location / {
+                proxy_pass http://{{load_balancer_addr}}:{{load_balancer_port}};
+              }
+            }
+          }
+    - name: httpd_can_network_connect
+      ansible.builtin.command: setsebool -P httpd_can_network_connect 1
+    - name: start nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: started
+        enabled: yes
+    - name: reload nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: reloaded
+    - name: check bastion
+      ansible.builtin.uri:
+        url: http://localhost
