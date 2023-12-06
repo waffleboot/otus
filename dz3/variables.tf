@@ -30,15 +30,15 @@ variable nodes {
         nginx-1 = {
             ip_address = "192.168.0.21"
         }
-//      nginx-2 = {
-//          ip_address = "192.168.0.22"
-//      }
+        nginx-2 = {
+            ip_address = "192.168.0.22"
+        }
         backend-1 = {
             ip_address = "192.168.0.31"
         }
-//      backend-2 = {
-//          ip_address = "192.168.0.32"
-//      }
+        backend-2 = {
+            ip_address = "192.168.0.32"
+        }
         db = {
             ip_address = "192.168.0.41"
         }

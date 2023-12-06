@@ -52,6 +52,8 @@
     - name: check wordpress
       ansible.builtin.uri:
         url: http://{{inventory_hostname}}:{{load_balancer_port}}
+        status_code: [200,302]
+        follow_redirects: no
 
 - hosts: nginx
   become: yes
@@ -60,6 +62,8 @@
     - name: check backend
       ansible.builtin.uri:
         url: http://backend-1.ru-central1.internal:{{load_balancer_port}}
+        status_code: [200,302]
+        follow_redirects: no
     - name: install nginx
       ansible.builtin.yum:
         update_cache: yes
@@ -72,6 +76,7 @@
           http {
             upstream backend {
               server backend-1.ru-central1.internal:{{load_balancer_port}};
+              server backend-2.ru-central1.internal:{{load_balancer_port}};
             }
             server {
               listen {{load_balancer_port}};
@@ -94,6 +99,8 @@
     - name: check nginx
       ansible.builtin.uri:
         url: http://{{inventory_hostname}}:{{load_balancer_port}}
+        status_code: [200,302]
+        follow_redirects: no
 
 - hosts: bastion
   become: yes
@@ -102,6 +109,8 @@
     - name: check load balancer
       ansible.builtin.uri:
         url: http://{{load_balancer_addr}}:{{load_balancer_port}}
+        status_code: [200,302]
+        follow_redirects: no
     - name: install nginx
       ansible.builtin.yum:
         update_cache: yes
@@ -112,13 +121,10 @@
         content: |
           events {}
           http {
-            upstream backend {
-              server {{load_balancer_addr}}:{{load_balancer_port}};
-            }
             server {
               listen 80;
               location / {
-                proxy_pass http://backend;
+                proxy_pass http://{{load_balancer_addr}}:{{load_balancer_port}};
               }
             }
           }

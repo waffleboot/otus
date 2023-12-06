@@ -5,12 +5,14 @@
 
 ; nginx
 ; ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@nginx-1.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa
+; ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@nginx-2.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa
 
 ; bastion
 ; ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@bastion.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa
 
 ; backend
 ; ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@backend-1.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa
+; ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@backend-2.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa
 
 [all:vars]
 ansible_user=${ssh_user}
@@ -35,11 +37,8 @@ bastion.ru-central1.internal
 
 [backend]
 backend-1.ru-central1.internal
-; backend-2.ru-central1.internal
-
-[backend:vars]
-static_dir=/var/run/app/static
+backend-2.ru-central1.internal
 
 [nginx]
 nginx-1.ru-central1.internal
-; nginx-2.ru-central1.internal
+nginx-2.ru-central1.internal
