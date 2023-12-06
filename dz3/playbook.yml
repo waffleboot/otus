@@ -47,6 +47,7 @@
         docker run --name wordpress -p {{load_balancer_port}}:80 --restart always -d
         -e WORDPRESS_DB_HOST={{WORDPRESS_DB_HOST}} -e WORDPRESS_DB_NAME={{WORDPRESS_DB_NAME}}
         -e WORDPRESS_DB_USER={{WORDPRESS_DB_USER}} -e WORDPRESS_DB_PASSWORD={{WORDPRESS_DB_PASSWORD}}
+        -e WORDPRESS_CONFIG_EXTRA='define('\'WP_SITEURL\',\''http://{{public_ip}}'\'');'
         wordpress
     - name: check wordpress
       ansible.builtin.uri:
@@ -93,17 +94,11 @@
     - name: check nginx
       ansible.builtin.uri:
         url: http://{{inventory_hostname}}:{{load_balancer_port}}
-    - name: check load balancer
-      ansible.builtin.uri:
-        url: http://{{load_balancer_addr}}:{{load_balancer_port}}
 
 - hosts: bastion
   become: yes
   gather_facts: no
   tasks:
-    - name: check nginx
-      ansible.builtin.uri:
-        url: http://nginx-1.ru-central1.internal:{{load_balancer_port}}
     - name: check load balancer
       ansible.builtin.uri:
         url: http://{{load_balancer_addr}}:{{load_balancer_port}}
@@ -121,7 +116,7 @@
               server {{load_balancer_addr}}:{{load_balancer_port}};
             }
             server {
-              listen {{load_balancer_port}};
+              listen 80;
               location / {
                 proxy_pass http://backend;
               }
@@ -138,6 +133,6 @@
       ansible.builtin.systemd:
         name: nginx
         state: reloaded
-    - name: check bastion
+    - name: check public ip
       ansible.builtin.uri:
-        url: http://localhost
+        url: http://{{public_ip}}
