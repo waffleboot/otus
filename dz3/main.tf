@@ -43,9 +43,9 @@ resource yandex_lb_network_load_balancer load_balancer {
   attached_target_group {
     target_group_id = yandex_lb_target_group.target_group.id
     healthcheck {
-      name = "http"
-      http_options {
-        port = 80
+      name = "tcp"
+      tcp_options {
+        port = var.load_balancer.port
       }
     }
   }
