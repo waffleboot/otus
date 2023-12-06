@@ -4,6 +4,8 @@ RUN apt update && apt install -y vim openssh-client curl wget unzip python3-pip
 
 RUN pip install --prefix /usr/local ansible
 
+RUN ansible-galaxy install geerlingguy.mysql
+
 RUN wget https://hashicorp-releases.yandexcloud.net/terraform/1.6.3/terraform_1.6.3_linux_arm64.zip && \
     unzip terraform_1.6.3_linux_arm64.zip -d /usr/bin && rm terraform_1.6.3_linux_arm64.zip
 
