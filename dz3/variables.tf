@@ -15,7 +15,7 @@ variable load_balancer {
     })
     default = {
         addr = "192.168.0.254"
-        port = 8080
+        port = 80
     }
 }
 
