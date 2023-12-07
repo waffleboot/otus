@@ -12,16 +12,16 @@
         state: latest
         pkg:
           - targetcli
-    - command: targetcli /iscsi delete {{ target }}
+    - command: targetcli /iscsi delete {{ gfs2_target }}
       ignore_errors: true
     - command: targetcli /backstores/fileio delete disk01
       ignore_errors: true
     - name: Map disk
       command: targetcli /backstores/fileio create disk01 /var/run/disk
     - name: Create target
-      command: targetcli /iscsi create {{ target }}
+      command: targetcli /iscsi create {{ gfs2_target }}
     - name: Create LUN
-      command: targetcli /iscsi/{{ target }}/tpg1/luns create /backstores/fileio/disk01
+      command: targetcli /iscsi/{{ gfs2_target }}/tpg1/luns create /backstores/fileio/disk01
 
 - hosts: backend
   become: true
@@ -47,14 +47,14 @@
         name: hacluster
         password: $6$mysecretsalt$2PO0ANor95BEjI5Df1m7NeKkzF1s5xkb7wvuJKdQc59S1fY0JQcHadoT0wRjIhCDVcOTzkR8DDkmxn1rurx5w1
 
-- hosts: admin
+- hosts: gfs2_admin
   become: true
   gather_facts: no
   tasks:
     - name: Auth to pcs
-      command: pcs cluster auth {{ clients }} -u hacluster -p hacluster_pwd
+      command: pcs cluster auth {{ gfs2_clients }} -u hacluster -p hacluster_pwd
     - name: Setup pcs
-      command: pcs cluster setup --name {{ pacemaker }} {{ clients }}
+      command: pcs cluster setup --name {{ gfs2_pacemaker }} {{ gfs2_clients }}
     - name: Enable pcs
       command: pcs cluster enable --all
     - name: Start pcs
@@ -71,7 +71,7 @@
     - command: cat /etc/iscsi/initiatorname.iscsi
       register: initiatorname
     - name: Grant access
-      command: "targetcli /iscsi/{{ target }}/tpg1/acls create {{ initiatorname.stdout.split('InitiatorName=').1 }}"
+      command: "targetcli /iscsi/{{ gfs2_target }}/tpg1/acls create {{ initiatorname.stdout.split('InitiatorName=').1 }}"
       delegate_to: db.ru-central1.internal
     - name: Start iscsi
       ansible.builtin.systemd:
@@ -80,7 +80,7 @@
         enabled: true
         daemon-reload: true
     - name: Login to target
-      command: iscsiadm -m node -l -T {{ target }}
+      command: iscsiadm -m node -l -T {{ gfs2_target }}
 
 - hosts: db
   gather_facts: no
@@ -93,7 +93,7 @@
         content: "{{ output.stdout }}"
       delegate_to: localhost
 
-- hosts: admin
+- hosts: gfs2_admin
   become: true
   gather_facts: no
   tasks:
@@ -124,11 +124,11 @@
         state: present
 
     - name: Format filesystem
-      command: mkfs.gfs2 -O -j3 -p lock_dlm -t {{ pacemaker }}:gfs2 /dev/cluster_vg/cluster_lv
+      command: mkfs.gfs2 -O -j3 -p lock_dlm -t {{ gfs2_pacemaker }}:gfs2 /dev/cluster_vg/cluster_lv
       ignore_errors: true
 
     - name: Mount filesystem
-      command: pcs resource create clusterfs ocf:heartbeat:Filesystem device="/dev/cluster_vg/cluster_lv" directory="/var/www/html/wp-content/uploads" fstype="gfs2" "options=noatime" op monitor interval=10s on-fail=ignore clone interleave=true
+      command: pcs resource create clusterfs ocf:heartbeat:Filesystem device="/dev/cluster_vg/cluster_lv" directory="{{gfs2_mount_dir}}" fstype="gfs2" "options=noatime" op monitor interval=10s on-fail=ignore clone interleave=true
       ignore_errors: true
 
     - name: Add order constraint
@@ -140,7 +140,7 @@
     - name: Add colocation constraint
       command: pcs constraint colocation add clusterfs-clone with clvmd-clone
 
-- hosts: admin
+- hosts: gfs2_admin
   gather_facts: no
   tasks:
     - command: pcs status
@@ -196,14 +196,10 @@
       tags:
         - never
         - uninstall
-    - ansible.builtin.file:
-        path: /var/www/html/wp-content/uploads
-        state: directory
-        mode: '0777'
     - name: start wordpress
       ansible.builtin.command: >
         docker run --name wordpress -p {{load_balancer_port}}:80 --restart always -d
-        -v /var/www/html/wp-content/uploads:/var/www/html/wp-content/uploads
+        -v {{gfs2_mount_dir}}:/var/www/html/wp-content/uploads
         -e WORDPRESS_DB_HOST={{WORDPRESS_DB_HOST}} -e WORDPRESS_DB_NAME={{WORDPRESS_DB_NAME}}
         -e WORDPRESS_DB_USER={{WORDPRESS_DB_USER}} -e WORDPRESS_DB_PASSWORD={{WORDPRESS_DB_PASSWORD}}
         -e WORDPRESS_CONFIG_EXTRA='define('\'WP_SITEURL\',\''http://{{public_ip}}'\'');'
