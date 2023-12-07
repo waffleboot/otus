@@ -224,6 +224,7 @@
         status_code: [200,301,302]
         follow_redirects: no
       async: 120
+    - ansible.builtin.command: yum install -y epel-release
     - name: install nginx
       ansible.builtin.yum:
         update_cache: yes
@@ -274,6 +275,7 @@
         status_code: [200,301,302]
         follow_redirects: no
       async: 120
+    - ansible.builtin.command: yum install -y epel-release
     - name: install nginx
       ansible.builtin.yum:
         update_cache: yes
