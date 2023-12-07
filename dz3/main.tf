@@ -102,6 +102,12 @@ resource random_password mysql_password {
   override_special = "_%@"
 }
 
+resource random_password wordpress_password {
+  length = 16
+  special = true
+  override_special = "_%@"
+}
+
 resource local_file inventory-ini {
   content = templatefile("inventory.tftpl",{
     bastion  = local.bastion
@@ -127,6 +133,7 @@ resource local_file test-sh {
   content = templatefile("test.tftpl",{
     bastion  = local.bastion
     ssh_user = var.ssh_user
+    wordpress_password = random_password.wordpress_password.result
   })
   provisioner local-exec {
     command = "chmod u+x test.sh"
