@@ -115,6 +115,17 @@ resource local_file inventory-ini {
   }
 }
 
+resource local_file test-sh {
+  filename = "test.sh"
+  content = templatefile("test.tftpl",{
+    bastion  = local.bastion
+    ssh_user = var.ssh_user
+  })
+  provisioner local-exec {
+    command = "chmod u+x test.sh"
+  }
+}
+
 output "bastion" {
   value = local.bastion
 }
