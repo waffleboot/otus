@@ -88,5 +88,10 @@ https://www.digitalocean.com/community/tutorials/nginx-access-logs-error-logs
 https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/
 https://www.cyberciti.biz/faq/unix-linux-execute-command-using-ssh/
 https://subscription.packtpub.com/book/cloud-and-networking/9781800207554/2/ch02lvl1sec23/generating-passwords-with-terraform
+https://www.nginx.com/resources/wiki/start/topics/examples/forwarded/
+https://docs.nginx.com/nginx/admin-guide/monitoring/logging/#setting-up-the-access-log
+https://easyengine.io/tutorials/nginx/forwarding-visitors-real-ip/
+https://easyengine.io/tutorials/nginx/forwarding-visitors-real-ip/
+https://linuxize.com/post/bash-case-statement/
 
 GOOS=linux GOARCH=amd64 go build -o app main.go
