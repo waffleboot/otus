@@ -52,7 +52,7 @@
     - name: check wordpress
       ansible.builtin.uri:
         url: http://{{inventory_hostname}}:{{load_balancer_port}}
-        status_code: [200,302]
+        status_code: [200,301,302]
         follow_redirects: no
 
 - hosts: nginx
@@ -62,7 +62,7 @@
     - name: check backend
       ansible.builtin.uri:
         url: http://backend-1.ru-central1.internal:{{load_balancer_port}}
-        status_code: [200,302]
+        status_code: [200,301,302]
         follow_redirects: no
     - name: install nginx
       ansible.builtin.yum:
@@ -100,7 +100,7 @@
     - name: check nginx
       ansible.builtin.uri:
         url: http://{{inventory_hostname}}:{{load_balancer_port}}
-        status_code: [200,302]
+        status_code: [200,301,302]
         follow_redirects: no
 
 - hosts: bastion
@@ -110,7 +110,7 @@
     - name: check load balancer
       ansible.builtin.uri:
         url: http://{{load_balancer_addr}}:{{load_balancer_port}}
-        status_code: [200,302]
+        status_code: [200,301,302]
         follow_redirects: no
     - name: install nginx
       ansible.builtin.yum:
