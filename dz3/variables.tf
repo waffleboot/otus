@@ -1,11 +1,11 @@
 variable image_id {
     type = string
-    default = "fd81v7g3b2g481h03tsp"
+    default = "fd80hokdubc6pj50kvsd"
 }
 
 variable ssh_user {
     type = string
-    default = "almalinux"
+    default = "centos"
 }
 
 variable load_balancer {
