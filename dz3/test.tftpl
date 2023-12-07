@@ -67,6 +67,9 @@ case $1 in
             back)
                 ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@backend-$3.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa
                 ;;
+            db)
+                ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@db.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa
+                ;;
             bastion)
                 ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@bastion.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa
                 ;;
