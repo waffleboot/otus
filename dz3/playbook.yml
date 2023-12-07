@@ -64,6 +64,7 @@
         url: http://backend-1.ru-central1.internal:{{load_balancer_port}}
         status_code: [200,301,302]
         follow_redirects: no
+      async: 120
     - name: install nginx
       ansible.builtin.yum:
         update_cache: yes
@@ -88,6 +89,7 @@
           }
     - name: httpd_can_network_connect
       ansible.builtin.command: setsebool -P httpd_can_network_connect 1
+      async: 120
     - name: start nginx
       ansible.builtin.systemd:
         name: nginx
@@ -112,6 +114,7 @@
         url: http://{{load_balancer_addr}}:{{load_balancer_port}}
         status_code: [200,301,302]
         follow_redirects: no
+      async: 120
     - name: install nginx
       ansible.builtin.yum:
         update_cache: yes
@@ -132,6 +135,7 @@
           }
     - name: httpd_can_network_connect
       ansible.builtin.command: setsebool -P httpd_can_network_connect 1
+      async: 120
     - name: start nginx
       ansible.builtin.systemd:
         name: nginx
