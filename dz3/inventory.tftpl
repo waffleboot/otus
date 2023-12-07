@@ -22,7 +22,7 @@ ansible_ssh_common_args='-oProxyCommand="ssh -o StrictHostKeyChecking=accept-new
 WORDPRESS_DB_HOST=db.ru-central1.internal
 WORDPRESS_DB_NAME=wordpress_db
 WORDPRESS_DB_USER=wordpress_user
-WORDPRESS_DB_PASSWORD=z83lv2EEIdNn
+WORDPRESS_DB_PASSWORD=${mysql_password}
 
 load_balancer_addr=${load_balancer_addr}
 load_balancer_port=${load_balancer_port}
