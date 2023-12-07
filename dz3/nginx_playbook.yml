@@ -42,6 +42,9 @@
       tags:
         - never
         - uninstall
+    - ansible.builtin.file:
+        path: /var/www/html/wp-content/uploads
+        mode: '0777'
     - name: start wordpress
       ansible.builtin.command: >
         docker run --name wordpress -p {{load_balancer_port}}:80 --restart always -d
