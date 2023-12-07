@@ -87,5 +87,6 @@ https://jodies.de/ipcalc?host=192.168.0.0&mask1=24&mask2=
 https://www.digitalocean.com/community/tutorials/nginx-access-logs-error-logs
 https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/
 https://www.cyberciti.biz/faq/unix-linux-execute-command-using-ssh/
+https://subscription.packtpub.com/book/cloud-and-networking/9781800207554/2/ch02lvl1sec23/generating-passwords-with-terraform
 
 GOOS=linux GOARCH=amd64 go build -o app main.go
