@@ -1,0 +1,24 @@
+Cluster name: otuscluster
+Stack: corosync
+Current DC: backend-2.ru-central1.internal (version 1.1.23-1.el7_9.1-9acf116022) - partition with quorum
+Last updated: Thu Dec  7 20:22:37 2023
+Last change: Thu Dec  7 20:22:36 2023 by root via cibadmin on backend-1.ru-central1.internal
+
+2 nodes configured
+6 resource instances configured
+
+Online: [ backend-1.ru-central1.internal backend-2.ru-central1.internal ]
+
+Full list of resources:
+
+ Clone Set: dlm-clone [dlm]
+     Started: [ backend-1.ru-central1.internal backend-2.ru-central1.internal ]
+ Clone Set: clvmd-clone [clvmd]
+     Started: [ backend-1.ru-central1.internal backend-2.ru-central1.internal ]
+ Clone Set: clusterfs-clone [clusterfs]
+     Started: [ backend-1.ru-central1.internal backend-2.ru-central1.internal ]
+
+Daemon Status:
+  corosync: active/enabled
+  pacemaker: active/enabled
+  pcsd: active/enabled
