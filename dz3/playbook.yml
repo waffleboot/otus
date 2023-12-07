@@ -13,9 +13,13 @@
         pkg:
           - targetcli
     - command: targetcli /iscsi delete {{ gfs2_target }}
-      ignore_errors: true
+      tags:
+        - never
+        - uninstall
     - command: targetcli /backstores/fileio delete disk01
-      ignore_errors: true
+      tags:
+        - never
+        - uninstall
     - name: Map disk
       command: targetcli /backstores/fileio create disk01 /var/run/disk
     - name: Create target
