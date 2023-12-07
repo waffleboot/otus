@@ -1,5 +1,7 @@
 ; ${bastion}
 
+; wordpress password ${wordpress_password}
+
 ; db
 ; ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@db.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa
 

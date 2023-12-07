@@ -115,6 +115,7 @@ resource local_file inventory-ini {
     load_balancer_addr = var.load_balancer.addr
     load_balancer_port = var.load_balancer.port
     mysql_password = random_password.mysql_password.result
+    wordpress_password = random_password.wordpress_password.result
   })
   filename = "inventory.ini"
   provisioner remote-exec {
@@ -133,7 +134,6 @@ resource local_file test-sh {
   content = templatefile("test.tftpl",{
     bastion  = local.bastion
     ssh_user = var.ssh_user
-    wordpress_password = random_password.wordpress_password.result
   })
   provisioner local-exec {
     command = "chmod u+x test.sh"
