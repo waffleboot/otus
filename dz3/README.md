@@ -86,5 +86,6 @@ https://nginx.org/en/docs/http/ngx_http_upstream_module.html
 https://jodies.de/ipcalc?host=192.168.0.0&mask1=24&mask2=
 https://www.digitalocean.com/community/tutorials/nginx-access-logs-error-logs
 https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/
+https://www.cyberciti.biz/faq/unix-linux-execute-command-using-ssh/
 
 GOOS=linux GOARCH=amd64 go build -o app main.go
