@@ -75,6 +75,7 @@
           events {}
           http {
             upstream backend {
+              ip_hash;
               server backend-1.ru-central1.internal:{{load_balancer_port}};
               server backend-2.ru-central1.internal:{{load_balancer_port}};
             }
