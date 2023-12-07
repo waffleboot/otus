@@ -129,14 +129,14 @@ resource local_file inventory-ini {
   }
 }
 
-resource local_file test-sh {
-  filename = "test.sh"
-  content = templatefile("test.tftpl",{
+resource local_file run-sh {
+  filename = "run.sh"
+  content = templatefile("run.tftpl",{
     bastion  = local.bastion
     ssh_user = var.ssh_user
   })
   provisioner local-exec {
-    command = "chmod u+x test.sh"
+    command = "chmod u+x run.sh"
   }
 }
 

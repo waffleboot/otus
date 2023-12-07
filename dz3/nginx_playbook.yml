@@ -1,0 +1,153 @@
+---
+- hosts: db
+  become: yes
+  vars:
+    mysql_root_password: super-secure-password
+    mysql_databases:
+      - name: "{{WORDPRESS_DB_NAME}}"
+        encoding: latin1
+        collation: latin1_general_ci
+    mysql_users:
+      - name: "{{WORDPRESS_DB_USER}}"
+        host: "%"
+        password: "{{WORDPRESS_DB_PASSWORD}}"
+        priv: "wordpress_db.*:ALL"
+  roles:
+    - role: geerlingguy.mysql
+
+- hosts: backend
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: add docker repo
+      ansible.builtin.command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+    - name: install docker
+      ansible.builtin.yum:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+    - name: start docker
+      ansible.builtin.systemd:
+        name: docker
+        state: started
+        enabled: yes
+    - ansible.builtin.command: docker stop wordpress
+      tags:
+        - never
+        - uninstall
+    - ansible.builtin.command: docker rm wordpress
+      tags:
+        - never
+        - uninstall
+    - name: start wordpress
+      ansible.builtin.command: >
+        docker run --name wordpress -p {{load_balancer_port}}:80 --restart always -d
+        -v {{gfs2_mount_dir}}:/var/www/html/wp-content/uploads
+        -e WORDPRESS_DB_HOST={{WORDPRESS_DB_HOST}} -e WORDPRESS_DB_NAME={{WORDPRESS_DB_NAME}}
+        -e WORDPRESS_DB_USER={{WORDPRESS_DB_USER}} -e WORDPRESS_DB_PASSWORD={{WORDPRESS_DB_PASSWORD}}
+        -e WORDPRESS_CONFIG_EXTRA='define('\'WP_SITEURL\',\''http://{{public_ip}}'\'');'
+        wordpress
+    - name: check wordpress
+      ansible.builtin.uri:
+        url: http://{{inventory_hostname}}:{{load_balancer_port}}
+        status_code: [200,301,302]
+        follow_redirects: no
+
+- hosts: nginx
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: check backend
+      ansible.builtin.uri:
+        url: http://backend-1.ru-central1.internal:{{load_balancer_port}}
+        status_code: [200,301,302]
+        follow_redirects: no
+      async: 120
+    - ansible.builtin.command: yum install -y epel-release
+    - name: install nginx
+      ansible.builtin.yum:
+        update_cache: yes
+        name: nginx
+    - name: nginx.conf
+      ansible.builtin.copy:
+        dest: /etc/nginx/nginx.conf
+        content: |
+          events {}
+          http {
+            upstream backend {
+              hash $http_x_real_ip;
+              server backend-1.ru-central1.internal:{{load_balancer_port}};
+              server backend-2.ru-central1.internal:{{load_balancer_port}};
+            }
+            server {
+              listen {{load_balancer_port}};
+              location / {
+                proxy_pass http://backend;
+              }
+            }
+          }
+    - name: httpd_can_network_connect
+      ansible.builtin.command: setsebool -P httpd_can_network_connect 1
+      async: 120
+    - name: start nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: started
+        enabled: yes
+    - name: reload nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: reloaded
+    - name: check nginx
+      ansible.builtin.uri:
+        url: http://{{inventory_hostname}}:{{load_balancer_port}}
+        status_code: [200,301,302]
+        follow_redirects: no
+
+- hosts: bastion
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: check load balancer
+      ansible.builtin.uri:
+        url: http://{{load_balancer_addr}}:{{load_balancer_port}}
+        status_code: [200,301,302]
+        follow_redirects: no
+      async: 120
+    - ansible.builtin.command: yum install -y epel-release
+    - name: install nginx
+      ansible.builtin.yum:
+        update_cache: yes
+        name: nginx
+    - name: nginx.conf
+      ansible.builtin.copy:
+        dest: /etc/nginx/nginx.conf
+        content: |
+          events {}
+          http {
+            server {
+              listen 80;
+              proxy_set_header X-Real-IP $remote_addr;
+              location / {
+                proxy_pass http://{{load_balancer_addr}}:{{load_balancer_port}};
+              }
+            }
+          }
+    - name: httpd_can_network_connect
+      ansible.builtin.command: setsebool -P httpd_can_network_connect 1
+      async: 120
+    - name: start nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: started
+        enabled: yes
+    - name: reload nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: reloaded
+    - name: check public ip
+      ansible.builtin.uri:
+        url: http://{{public_ip}}
