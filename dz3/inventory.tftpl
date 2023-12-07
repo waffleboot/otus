@@ -32,7 +32,10 @@ WORDPRESS_DB_PASSWORD=${mysql_password}
 load_balancer_addr=${load_balancer_addr}
 load_balancer_port=${load_balancer_port}
 
-target=iqn.2018-09.ru.otus:storage.target00
+gfs2_target=iqn.2018-09.ru.otus:storage.target00
+gfs2_clients='backend-1.ru-central1.internal backend-2.ru-central1.internal'
+gfs2_pacemaker=otuscluster
+gfs2_mount_dir=/var/www/html/wp-content/uploads
 
 public_ip=${bastion}
 
@@ -49,3 +52,6 @@ backend-2.ru-central1.internal
 [nginx]
 nginx-1.ru-central1.internal
 nginx-2.ru-central1.internal
+
+[gfs2_admin]
+backend-1.ru-central1.internal
