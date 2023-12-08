@@ -94,5 +94,6 @@ https://easyengine.io/tutorials/nginx/forwarding-visitors-real-ip/
 https://easyengine.io/tutorials/nginx/forwarding-visitors-real-ip/
 https://linuxize.com/post/bash-case-statement/
 https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-centos-7
+[Setting the User in a Docker Container From the Host](https://www.baeldung.com/linux/docker-set-user-container-host)
 
 GOOS=linux GOARCH=amd64 go build -o app main.go
