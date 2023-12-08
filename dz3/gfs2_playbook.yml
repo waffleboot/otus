@@ -54,6 +54,8 @@
 - hosts: gfs2_admin
   become: true
   gather_facts: no
+  vars:
+    gfs2_clients: "{{ groups['backend'] | join(' ') }}"
   tasks:
     - name: Auth to pcs
       command: pcs cluster auth {{ gfs2_clients }} -u hacluster -p hacluster_pwd
