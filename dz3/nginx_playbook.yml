@@ -42,9 +42,6 @@
       tags:
         - never
         - uninstall
-    - ansible.builtin.file:
-        path: "{{gfs2_mount_dir}}"
-        mode: '0777'
     - name: docker pull
       ansible.builtin.command: docker pull wordpress
     - name: start wordpress
