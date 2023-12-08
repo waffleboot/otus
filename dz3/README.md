@@ -2,6 +2,35 @@
 
 ![](dz3.jpg)
 
+- 502 Bad Gateway в течении нескольких секунд при nginx/wordpress switchover, но потом восстанавливается.
+- Сессия не рвется, т.к. видимо wordpress сбрасывает сессию на диск, а /var/www/html под gfs2
+- Можно оставлять рабочим только wordpress-1, загружать картинку, потом делать switchover на wordpress-2 и картинка на месте (потому что gfs2).
+
+```
+$ ./wrk -t12 -c400 -d30s http://51.250.91.244/
+Running 30s test @ http://51.250.91.244/
+  12 threads and 400 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     1.13s   527.19ms   1.98s    61.54%
+    Req/Sec     5.24      7.43    60.00     91.38%
+  530 requests in 30.06s, 42.75MB read
+  Socket errors: connect 0, read 342364, write 0, timeout 491
+Requests/sec:     17.63
+Transfer/sec:      1.42MB
+```
+```
+$ ./wrk -t12 -c400 -d30s http://backend-1.ru-central1.internal
+Running 30s test @ http://backend-1.ru-central1.internal
+  12 threads and 400 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   586.21ms  314.65ms   1.63s    80.00%
+    Req/Sec     9.63     10.53    60.00     91.57%
+  538 requests in 30.05s, 43.56MB read
+  Socket errors: connect 0, read 1, write 0, timeout 443
+Requests/sec:     17.90
+Transfer/sec:      1.45MB
+```
+
 # Домашнее задание
 
 Настройка конфигурации веб приложения под высокую нагрузку
