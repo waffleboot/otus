@@ -60,6 +60,10 @@
         url: http://{{inventory_hostname}}:{{load_balancer_port}}
         status_code: [200,301,302]
         follow_redirects: no
+      register: result
+      retries: 3
+      delay: 10
+      until: result is not failed
 
 - hosts: nginx
   become: yes
