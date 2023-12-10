@@ -32,6 +32,10 @@
         name: mysql@bootstrap.service
         state: started
         enabled: yes
+      register: result
+      retries: 3
+      delay: 10
+      until: result is not failed
 
     - ansible.builtin.slurp:
         src: /var/log/mysqld.log
