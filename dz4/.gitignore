@@ -1,3 +1,4 @@
 id_rsa
 .terraform.lock.hcl
 /run.sh
+/var/lib/mysql
