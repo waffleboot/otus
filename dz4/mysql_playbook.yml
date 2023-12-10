@@ -3,18 +3,22 @@
   become: yes
   gather_facts: no
   tasks:
-    - ansible.builtin.yum:
+    - name: repo
+      ansible.builtin.yum:
         name: https://repo.percona.com/yum/percona-release-latest.noarch.rpm
     - ansible.builtin.command: percona-release enable-only pxc-80 release
     - ansible.builtin.command: percona-release enable tools release
-    - name: install pxc
+    - name: pxc
       ansible.builtin.yum:
         name: percona-xtradb-cluster
-    - ansible.builtin.lineinfile:
+
+    - name: node name
+      ansible.builtin.lineinfile:
         path: /etc/my.cnf
         regexp: '^wsrep_node_name='
         line: wsrep_node_name=pxc-{{ inventory_hostname_short }}
-    - ansible.builtin.lineinfile:
+    - name: cluster address
+      ansible.builtin.lineinfile:
         path: /etc/my.cnf
         regexp: '^wsrep_cluster_address='
         line: wsrep_cluster_address=gcomm://192.168.0.41,192.168.0.42,192.168.0.43
@@ -23,21 +27,25 @@
   become: yes
   gather_facts: no
   tasks:
-    - ansible.builtin.systemd:
+    - name: bootstrap
+      ansible.builtin.systemd:
         name: mysql@bootstrap.service
         state: started
         enabled: yes
+
     - ansible.builtin.slurp:
         src: /var/log/mysqld.log
       register: log
     - ansible.builtin.set_fact:
         mysql_pwd: "{{ log.content | b64decode | regex_findall('A temporary password is generated for root@localhost: (.*)') | first }}"
-    # - set_fact:
-        # mysql_pwd: rootPass
-    - ansible.builtin.command: mysql --user=root --password={{mysql_pwd}}
+    - name: change root password
+      ansible.builtin.command: mysql --user=root --password={{mysql_pwd}} --connect-expired-password
       args:
         stdin: "ALTER USER 'root'@'localhost' IDENTIFIED BY 'rootPass'"
-    - ansible.builtin.fetch:
+      ignore_errors: yes
+
+    - name: fetch certs
+      ansible.builtin.fetch:
         src: /var/lib/mysql/{{ item }}
         dest: var/lib/mysql/
         flat: yes
@@ -46,11 +54,27 @@
         - server-cert.pem
         - server-key.pem
 
-- hosts: db
+- hosts: db-2.ru-central1.internal
   become: yes
   gather_facts: no
   tasks:
-    - ansible.builtin.copy:
+    - ansible.builtin.systemd:
+        name: mysql
+      register: mysql_status
+    - name: start mysql
+      ansible.builtin.systemd:
+        name: mysql
+        state: started
+      ignore_errors: yes
+      when: mysql_status.status.ActiveState != "active"
+    - name: stop mysql
+      ansible.builtin.systemd:
+        name: mysql
+        state: stopped
+      when: mysql_status.status.ActiveState != "active"
+
+    - name: upload certs
+      ansible.builtin.copy:
         src: var/lib/mysql/{{ item }}
         dest: /var/lib/mysql/
         owner: mysql
@@ -60,15 +84,86 @@
         - server-cert.pem
         - server-key.pem
 
+    - name: start mysql
+      ansible.builtin.systemd:
+        name: mysql
+        state: started
+        enabled: yes
+
+- hosts: db-3.ru-central1.internal
+  become: yes
+  gather_facts: no
+  tasks:
+    - ansible.builtin.systemd:
+        name: mysql
+      register: mysql_status
+    - name: start mysql
+      ansible.builtin.systemd:
+        name: mysql
+        state: started
+      ignore_errors: yes
+      when: mysql_status.status.ActiveState != "active"
+    - name: stop mysql
+      ansible.builtin.systemd:
+        name: mysql
+        state: stopped
+      when: mysql_status.status.ActiveState != "active"
+
+    - name: upload certs
+      ansible.builtin.copy:
+        src: var/lib/mysql/{{ item }}
+        dest: /var/lib/mysql/
+        owner: mysql
+        group: mysql
+      with_items:
+        - ca.pem
+        - server-cert.pem
+        - server-key.pem
+
+    - name: start mysql
+      ansible.builtin.systemd:
+        name: mysql
+        state: started
+        enabled: yes
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # - hosts: db-2.ru-central1.internal
 #   become: yes
 #   gather_facts: no
 #   tasks:
-#     - ansible.builtin.systemd:
+#     - name: upload certs
+#       ansible.builtin.copy:
+#         src: var/lib/mysql/{{ item }}
+#         dest: db/ssl/
+#         owner: mysql
+#         group: mysql
+#       with_items:
+#         - ca.pem
+#         - server-cert.pem
+#         - server-key.pem
+#     - name: start mysql
+#       ansible.builtin.systemd:
 #         name: mysql
 #         state: started
 #         enabled: yes
-
+#     - name: restart mysql
+#       ansible.builtin.systemd:
+#         name: mysql
+#         state: restarted
 
   # vars:
   #   mysql_root_password: super-secure-password
