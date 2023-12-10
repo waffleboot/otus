@@ -27,20 +27,26 @@ variable nodes {
         bastion = {
             ip_address = "192.168.0.10"
         }
-        nginx-1 = {
-            ip_address = "192.168.0.21"
-        }
-        nginx-2 = {
-            ip_address = "192.168.0.22"
-        }
-        backend-1 = {
-            ip_address = "192.168.0.31"
-        }
-        backend-2 = {
-            ip_address = "192.168.0.32"
-        }
-        db = {
+//      nginx-1 = {
+//          ip_address = "192.168.0.21"
+//      }
+//      nginx-2 = {
+//          ip_address = "192.168.0.22"
+//      }
+//      backend-1 = {
+//          ip_address = "192.168.0.31"
+//      }
+//      backend-2 = {
+//          ip_address = "192.168.0.32"
+//      }
+        db-1 = {
             ip_address = "192.168.0.41"
+        }
+        db-2 = {
+            ip_address = "192.168.0.42"
+        }
+        db-3 = {
+            ip_address = "192.168.0.43"
         }
     }
 }
