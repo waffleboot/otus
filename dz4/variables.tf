@@ -21,11 +21,10 @@ variable load_balancer {
 
 variable nodes {
     type = map(object({
-        ip_address = string
+        ip_address = optional(string,null)
     }))
     default = {
         bastion = {
-            ip_address = "192.168.0.10"
         }
 //      nginx-1 = {
 //          ip_address = "192.168.0.21"
@@ -34,10 +33,8 @@ variable nodes {
 //          ip_address = "192.168.0.22"
 //      }
 //      backend-1 = {
-//          ip_address = "192.168.0.31"
 //      }
 //      backend-2 = {
-//          ip_address = "192.168.0.32"
 //      }
         db-1 = {
             ip_address = "192.168.0.41"
