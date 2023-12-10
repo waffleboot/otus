@@ -1,0 +1,158 @@
+---
+- hosts: db
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: Create file
+      community.general.filesize:
+        path: /var/run/disk
+        size: 1G
+    - name: Install targetcli
+      ansible.builtin.yum:
+        state: latest
+        pkg:
+          - targetcli
+    - command: targetcli /iscsi delete {{ gfs2_target }}
+      tags:
+        - never
+        - uninstall
+    - command: targetcli /backstores/fileio delete disk01
+      tags:
+        - never
+        - uninstall
+    - name: Map disk
+      command: targetcli /backstores/fileio create disk01 /var/run/disk
+    - name: Create target
+      command: targetcli /iscsi create {{ gfs2_target }}
+    - name: Create LUN
+      command: targetcli /iscsi/{{ gfs2_target }}/tpg1/luns create /backstores/fileio/disk01
+
+- hosts: backend
+  become: true
+  gather_facts: no
+  tasks:
+    - name: Install pacemaker
+      ansible.builtin.yum:
+        name:
+          - pcs
+          - pacemaker
+          - fence-agents-all
+          - iscsi-initiator-utils
+          - lvm2-cluster
+          - gfs2-utils
+
+    - name: Start pacemaker
+      ansible.builtin.systemd:
+        name: pcsd
+        state: started
+        enabled: true
+    - name: Set hacluster password
+      ansible.builtin.user:
+        name: hacluster
+        password: $6$mysecretsalt$2PO0ANor95BEjI5Df1m7NeKkzF1s5xkb7wvuJKdQc59S1fY0JQcHadoT0wRjIhCDVcOTzkR8DDkmxn1rurx5w1
+
+- hosts: gfs2_admin
+  become: true
+  gather_facts: no
+  vars:
+    gfs2_clients: "{{ groups['backend'] | join(' ') }}"
+  tasks:
+    - name: Auth to pcs
+      command: pcs cluster auth {{ gfs2_clients }} -u hacluster -p hacluster_pwd
+    - name: Setup pcs
+      command: pcs cluster setup --name {{ gfs2_pacemaker }} {{ gfs2_clients }}
+    - name: Enable pcs
+      command: pcs cluster enable --all
+    - name: Start pcs
+      command: pcs cluster start --all
+    - name: Stop stonith
+      command: pcs property set stonith-enabled=false
+
+- hosts: backend
+  become: true
+  gather_facts: no
+  tasks:
+    - name: Discover target
+      command: iscsiadm -m discovery -t st -p db.ru-central1.internal
+    - command: cat /etc/iscsi/initiatorname.iscsi
+      register: initiatorname
+    - name: Grant access
+      command: "targetcli /iscsi/{{ gfs2_target }}/tpg1/acls create {{ initiatorname.stdout.split('InitiatorName=').1 }}"
+      delegate_to: db.ru-central1.internal
+    - name: Start iscsi
+      ansible.builtin.systemd:
+        name: iscsi
+        state: started
+        enabled: true
+        daemon-reload: true
+    - name: Login to target
+      command: iscsiadm -m node -l -T {{ gfs2_target }}
+
+- hosts: db
+  gather_facts: no
+  tasks:
+    - command: targetcli ls
+      register: output
+      become: true
+    - ansible.builtin.copy:
+        dest: /home/otus/otus/dz3/targetcli.txt
+        content: "{{ output.stdout }}"
+      delegate_to: localhost
+
+- hosts: gfs2_admin
+  become: true
+  gather_facts: no
+  tasks:
+    - name: Create dlm
+      command: pcs resource create dlm systemd:dlm op monitor interval=30s on-fail=ignore clone interleave=true ordered=true
+
+    - name: Create clvmd
+      command: pcs resource create clvmd ocf:heartbeat:clvm op monitor interval=30s on-fail=ignore clone interleave=true ordered=true
+
+    - name: Create volume group
+      ansible.builtin.lvg:
+        vg: cluster_vg
+        vg_options: -Ay -cy
+        pvs: /dev/sda
+        state: present
+      register: result
+      retries: 3
+      delay: 10
+      until: result is not failed
+
+    - name: Create logical volume
+      ansible.builtin.lvol:
+        lv: cluster_lv
+        vg: cluster_vg
+        resizefs: true
+        size: +100%FREE
+        active: true
+        state: present
+
+    - name: Format filesystem
+      command: mkfs.gfs2 -O -j3 -p lock_dlm -t {{ gfs2_pacemaker }}:gfs2 /dev/cluster_vg/cluster_lv
+      ignore_errors: true
+
+    - name: Mount filesystem
+      command: pcs resource create clusterfs ocf:heartbeat:Filesystem device="/dev/cluster_vg/cluster_lv" directory="{{gfs2_mount_dir}}" fstype="gfs2" "options=noatime" op monitor interval=10s on-fail=ignore clone interleave=true
+      ignore_errors: true
+
+    - name: Add order constraint
+      command: pcs constraint order start dlm-clone then clvmd-clone
+
+    - name: Add order constraint
+      command: pcs constraint order start clvmd-clone then clusterfs-clone
+
+    - name: Add colocation constraint
+      command: pcs constraint colocation add clusterfs-clone with clvmd-clone
+
+- hosts: gfs2_admin
+  gather_facts: no
+  tasks:
+    - command: pcs status
+      become: true
+      register: output
+    - ansible.builtin.copy:
+        dest: /home/otus/otus/dz3/pcs.txt
+        content: "{{ output.stdout }}"
+      delegate_to: localhost

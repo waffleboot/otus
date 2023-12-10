@@ -1,0 +1,113 @@
+#!/bin/bash
+
+case $1 in
+    fail)
+        case $2 in
+            nginx)
+                case $3 in
+                    1)
+                        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@nginx-1.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa sudo systemctl stop nginx
+                        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@nginx-2.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa sudo systemctl start nginx
+                        ;;
+                    2)
+                        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@nginx-1.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa sudo systemctl start nginx
+                        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@nginx-2.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa sudo systemctl stop nginx
+                        ;;
+                esac
+                ;;
+            back)
+                case $3 in
+                    1)
+                        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@backend-1.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa sudo docker stop wordpress
+                        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@backend-2.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa sudo docker start wordpress
+                        ;;
+                    2)
+                        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@backend-1.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa sudo docker start wordpress
+                        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@backend-2.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa sudo docker stop wordpress
+                        ;;
+                esac
+                ;;
+        esac
+        ;;
+    nginx)
+        case $2 in
+            start)
+                case $3 in
+                    all)
+                        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@nginx-1.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa sudo systemctl start nginx
+                        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@nginx-2.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa sudo systemctl start nginx
+                        ;;
+                    *)
+                        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@nginx-$3.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa sudo systemctl start nginx
+                        ;;
+                esac
+            ;;
+            stop)
+                case $3 in
+                    all)
+                        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@nginx-1.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa sudo systemctl stop nginx
+                        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@nginx-2.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa sudo systemctl stop nginx
+                        ;;
+                    *)
+                        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@nginx-$3.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa sudo systemctl stop nginx
+                        ;;
+                esac
+            ;;
+        esac
+        ;;
+    back)
+        case $2 in
+            start)
+                case $3 in
+                    all)
+                        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@backend-1.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa sudo docker start wordpress
+                        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@backend-2.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa sudo docker start wordpress
+                    ;;
+                    *)
+                        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@backend-$3.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa sudo docker start wordpress
+                    ;;
+                esac
+            ;;
+            stop)
+                case $3 in
+                    all)
+                        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@backend-1.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa sudo docker stop wordpress
+                        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@backend-2.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa sudo docker stop wordpress
+                    ;;
+                    *)
+                        ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@backend-$3.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa sudo docker stop wordpress
+                    ;;
+                esac
+            ;;
+        esac
+        ;;
+    bastion)
+        case $2 in
+            start)
+                ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@bastion.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa sudo systemctl start nginx
+                ;;
+            stop)
+                ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@bastion.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa sudo systemctl stop nginx
+                ;;
+        esac
+        ;;
+    ssh)
+        case $2 in
+            nginx)
+                ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@nginx-$3.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa
+                ;;
+            back)
+                ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@backend-$3.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa
+                ;;
+            db)
+                ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@db.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa
+                ;;
+            bastion)
+                ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@bastion.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa
+                ;;
+        esac
+        ;;
+    open)
+        open http://${bastion}
+        ;;
+esac
