@@ -1,16 +1,85 @@
 ---
 - hosts: db
   become: yes
-  vars:
-    mysql_root_password: super-secure-password
-    mysql_databases:
-      - name: "{{WORDPRESS_DB_NAME}}"
-        encoding: latin1
-        collation: latin1_general_ci
-    mysql_users:
-      - name: "{{WORDPRESS_DB_USER}}"
-        host: "%"
-        password: "{{WORDPRESS_DB_PASSWORD}}"
-        priv: "wordpress_db.*:ALL"
-  roles:
-    - role: geerlingguy.mysql
+  gather_facts: no
+  tasks:
+    - ansible.builtin.yum:
+        name: https://repo.percona.com/yum/percona-release-latest.noarch.rpm
+    - ansible.builtin.command: percona-release enable-only pxc-80 release
+    - ansible.builtin.command: percona-release enable tools release
+    - name: install pxc
+      ansible.builtin.yum:
+        name: percona-xtradb-cluster
+    - ansible.builtin.lineinfile:
+        path: /etc/my.cnf
+        regexp: '^wsrep_node_name='
+        line: wsrep_node_name=pxc-{{ inventory_hostname_short }}
+    - ansible.builtin.lineinfile:
+        path: /etc/my.cnf
+        regexp: '^wsrep_cluster_address='
+        line: wsrep_cluster_address=gcomm://192.168.0.41,192.168.0.42,192.168.0.43
+
+- hosts: db-1.ru-central1.internal
+  become: yes
+  gather_facts: no
+  tasks:
+    - ansible.builtin.systemd:
+        name: mysql@bootstrap.service
+        state: started
+        enabled: yes
+    - ansible.builtin.slurp:
+        src: /var/log/mysqld.log
+      register: log
+    - ansible.builtin.set_fact:
+        mysql_pwd: "{{ log.content | b64decode | regex_findall('A temporary password is generated for root@localhost: (.*)') | first }}"
+    # - set_fact:
+        # mysql_pwd: rootPass
+    - ansible.builtin.command: mysql --user=root --password={{mysql_pwd}}
+      args:
+        stdin: "ALTER USER 'root'@'localhost' IDENTIFIED BY 'rootPass'"
+    - ansible.builtin.fetch:
+        src: /var/lib/mysql/{{ item }}
+        dest: var/lib/mysql/
+        flat: yes
+      with_items:
+        - ca.pem
+        - server-cert.pem
+        - server-key.pem
+
+- hosts: db
+  become: yes
+  gather_facts: no
+  tasks:
+    - ansible.builtin.copy:
+        src: var/lib/mysql/{{ item }}
+        dest: /var/lib/mysql/
+        owner: mysql
+        group: mysql
+      with_items:
+        - ca.pem
+        - server-cert.pem
+        - server-key.pem
+
+# - hosts: db-2.ru-central1.internal
+#   become: yes
+#   gather_facts: no
+#   tasks:
+#     - ansible.builtin.systemd:
+#         name: mysql
+#         state: started
+#         enabled: yes
+
+
+  # vars:
+  #   mysql_root_password: super-secure-password
+  #   mysql_databases:
+  #     - name: "{{WORDPRESS_DB_NAME}}"
+  #       encoding: latin1
+  #       collation: latin1_general_ci
+  #   mysql_users:
+  #     - name: "{{WORDPRESS_DB_USER}}"
+  #       host: "%"
+  #       password: "{{WORDPRESS_DB_PASSWORD}}"
+  #       priv: "wordpress_db.*:ALL"
+  # roles:
+  #   - role: geerlingguy.mysql
