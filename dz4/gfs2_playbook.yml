@@ -73,12 +73,12 @@
   gather_facts: no
   tasks:
     - name: Discover target
-      command: iscsiadm -m discovery -t st -p db.ru-central1.internal
+      command: iscsiadm -m discovery -t st -p {{ gfs2_node }}
     - command: cat /etc/iscsi/initiatorname.iscsi
       register: initiatorname
     - name: Grant access
       command: "targetcli /iscsi/{{ gfs2_target }}/tpg1/acls create {{ initiatorname.stdout.split('InitiatorName=').1 }}"
-      delegate_to: db.ru-central1.internal
+      delegate_to: '{{ gfs2_node }}'
     - name: Start iscsi
       ansible.builtin.systemd:
         name: iscsi
