@@ -130,10 +130,59 @@
         state: started
         enabled: yes
 
+- hosts: db-1.ru-central1.internal
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: proxysql
+      ansible.builtin.yum:
+        name:
+          - percona-xtradb-cluster-client
+          - proxysql2
+    - systemd:
+        name: proxysql
+        state: started
+        enabled: yes
 
+    - command: mysql -uadmin -padmin -h 127.0.0.1 -P 6032
+      args:
+        stdin: '{{item}}'
+      with_items:
+        - INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (1,'192.168.0.41',3306);
+        - INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (1,'192.168.0.42',3306);
+        - INSERT INTO mysql_servers(hostgroup_id, hostname, port) VALUES (1,'192.168.0.43',3306);
+        - LOAD MYSQL SERVERS TO RUNTIME;
+        - SAVE MYSQL SERVERS TO DISK;
+        - INSERT INTO mysql_replication_hostgroups (writer_hostgroup,reader_hostgroup,comment) VALUES (0,1,'cluster1');
+        - LOAD MYSQL SERVERS TO RUNTIME;
+        - SAVE MYSQL SERVERS TO DISK;
 
+    - command: mysql -uroot -prootPass
+      args:
+        stdin: '{{item}}'
+      with_items:
+        - CREATE USER 'proxysql'@'%' IDENTIFIED WITH caching_sha2_password by 'Otus321$';
+        - FLUSH PRIVILEGES;
 
+    - command: mysql -uadmin -padmin -h 127.0.0.1 -P 6032
+      args:
+        stdin: '{{item}}'
+      with_items:
+        - UPDATE global_variables SET variable_value='proxysql' WHERE variable_name='mysql-monitor_username';
+        - UPDATE global_variables SET variable_value='Otus321$' WHERE variable_name='mysql-monitor_password';
+        - LOAD MYSQL VARIABLES TO RUNTIME;
+        - SAVE MYSQL VARIABLES TO DISK;
+        - INSERT INTO mysql_users (username,password) VALUES ('{{WORDPRESS_DB_USER}}','{{WORDPRESS_DB_PASSWORD}}');
+        - LOAD MYSQL USERS TO RUNTIME;
+        - SAVE MYSQL USERS TO DISK;
 
+    - command: mysql -uroot -prootPass
+      args:
+        stdin: '{{item}}'
+      with_items:
+        - CREATE USER '{{WORDPRESS_DB_USER}}'@'%' IDENTIFIED WITH mysql_native_password BY '{{WORDPRESS_DB_PASSWORD}}';
+        - GRANT ALL ON *.* TO '{{WORDPRESS_DB_USER}}'@'%';
+        - FLUSH PRIVILEGES;
 
 
 
