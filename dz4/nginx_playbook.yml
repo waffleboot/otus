@@ -28,14 +28,6 @@
         - uninstall
     - name: docker pull
       ansible.builtin.command: docker pull wordpress
-    - name: wait
-      ansible.builtin.wait_for:
-        host: '{{WORDPRESS_DB_HOST}}'
-        port: '{{WORDPRESS_DB_PORT}}'
-        state: started
-        delay: 0
-        timeout: 3
-      ignore_errors: yes
     - name: start wordpress
       ansible.builtin.command: >
         docker run --name wordpress -p {{load_balancer_port}}:80 --restart always -d
