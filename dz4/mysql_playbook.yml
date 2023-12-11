@@ -144,6 +144,13 @@
         name: proxysql
         state: started
         enabled: yes
+    - name: wait
+      ansible.builtin.wait_for:
+        port: 6032
+        state: started
+        delay: 0
+        timeout: 3
+      ignore_errors: yes
 
     - name: configure proxysql
       command: mysql -uadmin -padmin -h 127.0.0.1 -P 6032
