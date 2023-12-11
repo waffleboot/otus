@@ -26,16 +26,16 @@ variable nodes {
     default = {
         bastion = {
         }
-//      nginx-1 = {
-//          ip_address = "192.168.0.21"
-//      }
-//      nginx-2 = {
-//          ip_address = "192.168.0.22"
-//      }
-//      backend-1 = {
-//      }
-//      backend-2 = {
-//      }
+        nginx-1 = {
+            ip_address = "192.168.0.21"
+        }
+        nginx-2 = {
+            ip_address = "192.168.0.22"
+        }
+        backend-1 = {
+        }
+        backend-2 = {
+        }
         db-1 = {
             ip_address = "192.168.0.41"
         }
