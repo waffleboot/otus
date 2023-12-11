@@ -40,7 +40,8 @@
       ansible.builtin.command: >
         docker run --name wordpress -p {{load_balancer_port}}:80 --restart always -d
         -v {{gfs2_mount_dir}}:{{gfs2_mount_dir}}
-        -e WORDPRESS_DB_HOST={{WORDPRESS_DB_HOST}} -e WORDPRESS_DB_NAME={{WORDPRESS_DB_NAME}}
+        -e WORDPRESS_DB_NAME={{WORDPRESS_DB_NAME}}
+        -e WORDPRESS_DB_HOST={{WORDPRESS_DB_HOST}} -e WORDPRESS_DB_PORT={{WORDPRESS_DB_PORT}}
         -e WORDPRESS_DB_USER={{WORDPRESS_DB_USER}} -e WORDPRESS_DB_PASSWORD={{WORDPRESS_DB_PASSWORD}}
         -e WORDPRESS_CONFIG_EXTRA='define('\'WP_SITEURL\',\''http://{{public_ip}}'\'');'
         wordpress
