@@ -194,3 +194,10 @@
         - CREATE USER '{{WORDPRESS_DB_USER}}'@'%' IDENTIFIED WITH mysql_native_password BY '{{WORDPRESS_DB_PASSWORD}}';
         - GRANT ALL ON *.* TO '{{WORDPRESS_DB_USER}}'@'%';
         - FLUSH PRIVILEGES;
+
+    - name: create wordpress database
+      command: mysql -u{{WORDPRESS_DB_USER}} -p{{WORDPRESS_DB_PASSWORD}}
+      args:
+        stdin: '{{item}}'
+      with_items:
+        - CREATE DATABASE {{WORDPRESS_DB_NAME}};
