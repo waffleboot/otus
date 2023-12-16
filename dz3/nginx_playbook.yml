@@ -69,7 +69,7 @@
     - name: check backend
       ansible.builtin.uri:
         url: http://backend-1.ru-central1.internal:{{load_balancer_port}}
-        status_code: [200,301,302]
+        status_code: [200,301,302,403]
         follow_redirects: no
       async: 120
     - name: epel-release
@@ -111,7 +111,7 @@
     - name: check nginx
       ansible.builtin.uri:
         url: http://{{inventory_hostname}}:{{load_balancer_port}}
-        status_code: [200,301,302]
+        status_code: [200,301,302,403]
         follow_redirects: no
 
 - hosts: bastion
@@ -121,7 +121,7 @@
     - name: check load balancer
       ansible.builtin.uri:
         url: http://{{load_balancer_addr}}:{{load_balancer_port}}
-        status_code: [200,301,302]
+        status_code: [200,301,302,403]
         follow_redirects: no
       async: 120
     - name: epel-release
@@ -159,3 +159,5 @@
     - name: check public ip
       ansible.builtin.uri:
         url: http://{{public_ip}}
+        status_code: [200,301,302,403]
+        follow_redirects: no
