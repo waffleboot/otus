@@ -35,7 +35,7 @@ load_balancer_port=${load_balancer_port}
 
 gfs2_target=iqn.2018-09.ru.otus:storage.target00
 gfs2_pacemaker=otuscluster
-gfs2_mount_dir=/var/www/html
+gfs2_mount_dir=/var/www/html/wordpress/wp-content/uploads
 gfs2_node=db-2.ru-central1.internal
 
 public_ip=${bastion}
@@ -57,4 +57,4 @@ nginx-1.ru-central1.internal
 nginx-2.ru-central1.internal
 
 [gfs2_admin]
-backend-2.ru-central1.internal
+backend-1.ru-central1.internal

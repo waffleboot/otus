@@ -27,3 +27,10 @@
 https://stackoverflow.com/questions/38847824/ansible-how-to-get-service-status-by-ansible
 https://docs.percona.com/percona-xtradb-cluster/8.0/encrypt-traffic.html
 https://docs.percona.com/percona-xtradb-cluster/8.0/encrypt-traffic.html#generate-keys-and-certificates-manually
+
+# Порядок запуска
+
+- mysql_install.sh
+- wordpress_install.sh
+- nginx_install.sh
+- gfs2_install.sh
