@@ -81,3 +81,15 @@
         delay: 0
         timeout: 3
       ignore_errors: yes
+    - ansible.builtin.uri:
+        url: http://{{public_ip}}/wordpress/wp-admin/install.php?step=2
+        method: POST
+        body_format: form-urlencoded
+        body:
+          weblog_title: otus
+          user_name: admin
+          admin_password: bQ2vSkWKzP4kGRDi
+          admin_password2: bQ2vSkWKzP4kGRDi
+          admin_email: test@example.com
+          Submit: Install WordPress
+          language: ''
