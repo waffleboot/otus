@@ -73,8 +73,11 @@
         name: nginx
         state: started
         enabled: yes
-    - name: check public ip
-      ansible.builtin.uri:
-        url: http://{{public_ip}}
-        status_code: [200,301,302,403]
-        follow_redirects: no
+    - name: wait
+      ansible.builtin.wait_for:
+        host: '{{public_ip}}'
+        port: '{{load_balancer_port}}'
+        state: started
+        delay: 0
+        timeout: 3
+      ignore_errors: yes
