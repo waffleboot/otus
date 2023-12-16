@@ -6,3 +6,5 @@
 .terraform
 
 *.tfvars
+
+/dz3_pack
