@@ -3,12 +3,6 @@
   become: yes
   gather_facts: no
   tasks:
-    - name: check backend
-      ansible.builtin.uri:
-        url: http://backend-1.ru-central1.internal:{{load_balancer_port}}
-        status_code: [200,301,302,403]
-        follow_redirects: no
-      async: 120
     - name: epel-release
       ansible.builtin.command: yum install -y epel-release
     - name: install nginx
@@ -41,10 +35,6 @@
         name: nginx
         state: started
         enabled: yes
-    - name: reload nginx
-      ansible.builtin.systemd:
-        name: nginx
-        state: reloaded
     - name: check nginx
       ansible.builtin.uri:
         url: http://{{inventory_hostname}}:{{load_balancer_port}}
@@ -55,12 +45,6 @@
   become: yes
   gather_facts: no
   tasks:
-    - name: check load balancer
-      ansible.builtin.uri:
-        url: http://{{load_balancer_addr}}:{{load_balancer_port}}
-        status_code: [200,301,302,403]
-        follow_redirects: no
-      async: 120
     - name: epel-release
       ansible.builtin.command: yum install -y epel-release
     - name: install nginx
@@ -89,10 +73,6 @@
         name: nginx
         state: started
         enabled: yes
-    - name: reload nginx
-      ansible.builtin.systemd:
-        name: nginx
-        state: reloaded
     - name: check public ip
       ansible.builtin.uri:
         url: http://{{public_ip}}
