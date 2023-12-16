@@ -1,20 +1,4 @@
 ---
-- hosts: db
-  become: yes
-  vars:
-    mysql_root_password: super-secure-password
-    mysql_databases:
-      - name: "{{WORDPRESS_DB_NAME}}"
-        encoding: latin1
-        collation: latin1_general_ci
-    mysql_users:
-      - name: "{{WORDPRESS_DB_USER}}"
-        host: "%"
-        password: "{{WORDPRESS_DB_PASSWORD}}"
-        priv: "wordpress_db.*:ALL"
-  roles:
-    - role: geerlingguy.mysql
-
 - hosts: nginx
   become: yes
   gather_facts: no
