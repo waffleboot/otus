@@ -156,3 +156,10 @@
         dest: /home/otus/otus/dz3/pcs.txt
         content: "{{ output.stdout }}"
       delegate_to: localhost
+
+- hosts: backend
+  become: true
+  gather_facts: no
+  tasks:
+    - name: Change owner
+      command: chown apache:apache /var/www/html/wordpress/wp-content/uploads
