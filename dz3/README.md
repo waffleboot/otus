@@ -138,3 +138,7 @@ GOOS=linux GOARCH=amd64 go build -o app main.go
 - wordpress_install.sh
 - nginx_install.sh
 - gfs2_install.sh
+
+# Update
+
+Старая версия хранится под тэгом dz3.6.1
