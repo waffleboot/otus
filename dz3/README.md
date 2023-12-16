@@ -131,3 +131,10 @@ https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-centos-
 [ansible tag only](https://serverfault.com/questions/623634/ansible-execute-task-only-when-a-tag-is-specified/1003479#1003479)
 
 GOOS=linux GOARCH=amd64 go build -o app main.go
+
+# Установка
+
+- mysql_install.sh
+- wordpress_install.sh
+- nginx_install.sh
+- gfs2_install.sh
