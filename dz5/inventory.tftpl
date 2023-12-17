@@ -1,0 +1,60 @@
+; ${bastion}
+
+; wordpress password bQ2vSkWKzP4kGRDi
+
+; db
+; ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@db.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa
+
+; nginx
+; ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@nginx-1.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa
+; ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@nginx-2.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa
+
+; bastion
+; ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@bastion.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa
+
+; backend
+; ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@backend-1.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa
+; ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${ssh_user}@backend-2.ru-central1.internal -oProxyCommand="ssh ${ssh_user}@${bastion} -i id_rsa -W %h:%p" -i id_rsa
+
+[ssh_connection]
+ssh_args='-o ControlMaster=auto -o ControlPersist=60s'
+
+[all:vars]
+ansible_user=${ssh_user}
+ansible_ssh_private_key_file=id_rsa
+ansible_ssh_common_args='-oProxyCommand="ssh -o StrictHostKeyChecking=accept-new -W %h:%p -q -i id_rsa ${ssh_user}@${bastion}" -i id_rsa -o StrictHostKeyChecking=accept-new'
+
+WORDPRESS_DB_HOST=db-1.ru-central1.internal
+WORDPRESS_DB_PORT=6033
+WORDPRESS_DB_NAME=wordpress_db
+WORDPRESS_DB_USER=wordpress_user
+WORDPRESS_DB_PASSWORD=${mysql_password}
+
+load_balancer_addr=${load_balancer_addr}
+load_balancer_port=${load_balancer_port}
+
+gfs2_target=iqn.2018-09.ru.otus:storage.target00
+gfs2_pacemaker=otuscluster
+gfs2_mount_dir=/var/www/html/wordpress/wp-content/uploads
+gfs2_node=db-2.ru-central1.internal
+
+public_ip=${bastion}
+
+[db]
+db-1.ru-central1.internal
+db-2.ru-central1.internal
+db-3.ru-central1.internal
+
+[bastion]
+bastion.ru-central1.internal
+
+[backend]
+backend-1.ru-central1.internal
+backend-2.ru-central1.internal
+
+[nginx]
+nginx-1.ru-central1.internal
+nginx-2.ru-central1.internal
+
+[gfs2_admin]
+backend-1.ru-central1.internal
