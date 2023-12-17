@@ -68,11 +68,14 @@
     - name: httpd_can_network_connect
       ansible.builtin.command: setsebool -P httpd_can_network_connect 1
       async: 120
+      poll: 0
     - name: start nginx
       ansible.builtin.systemd:
         name: nginx
         state: started
         enabled: yes
+      async: 120
+      poll: 0
     - name: wait
       ansible.builtin.wait_for:
         host: '{{public_ip}}'

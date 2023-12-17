@@ -5,6 +5,8 @@
   tasks:
     - name: disable SELinux
       command: setenforce 0
+      async: 120
+      poll: 0
     - name: install apache
       ansible.builtin.yum:
         update_cache: yes
@@ -26,6 +28,8 @@
         name:
           - php
           - php-cli
+      async: 120
+      poll: 0
     - name: download wordpress
       ansible.builtin.get_url:
         url: https://wordpress.org/latest.zip
@@ -45,6 +49,8 @@
       ansible.builtin.systemd:
         name: httpd
         state: restarted
+      async: 120
+      poll: 0
     - name: wait
       ansible.builtin.wait_for:
         port: '{{load_balancer_port}}'
