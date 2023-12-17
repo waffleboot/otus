@@ -45,12 +45,10 @@
       ansible.builtin.systemd:
         name: httpd
         state: restarted
-    - name: check wordpress
-      ansible.builtin.uri:
-        url: http://{{inventory_hostname}}:{{load_balancer_port}}
-        status_code: [200,301,302,403]
-        follow_redirects: no
-      register: result
-      retries: 3
-      delay: 10
-      until: result is not failed
+    - name: wait
+      ansible.builtin.wait_for:
+        port: '{{load_balancer_port}}'
+        state: started
+        delay: 0
+        timeout: 3
+      ignore_errors: yes

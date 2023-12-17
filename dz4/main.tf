@@ -102,12 +102,6 @@ resource random_password mysql_password {
   override_special = "_%@"
 }
 
-resource random_password wordpress_password {
-  length = 16
-  special = true
-  override_special = "_%@"
-}
-
 resource local_file inventory-ini {
   content = templatefile("inventory.tftpl",{
     bastion  = local.bastion
@@ -115,7 +109,6 @@ resource local_file inventory-ini {
     load_balancer_addr = var.load_balancer.addr
     load_balancer_port = var.load_balancer.port
     mysql_password = random_password.mysql_password.result
-    wordpress_password = random_password.wordpress_password.result
   })
   filename = "inventory.ini"
   provisioner remote-exec {
