@@ -1,0 +1,53 @@
+---
+- hosts: db
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: remove timedhosts.txt
+      ansible.builtin.file:
+        path: /var/cache/yum/x86_64/7/timedhosts.txt
+        state: absent
+    - name: exclude mirrors.datahouse.ru
+      ansible.builtin.lineinfile:
+        dest: /etc/yum/pluginconf.d/fastestmirror.conf
+        regexp: '^#?exclude=.*'
+        line: exclude=mirrors.datahouse.ru
+    - ansible.builtin.command: yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+      ignore_errors: yes
+    - ansible.builtin.command: yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+      ignore_errors: yes
+    - name: install postgresql
+      ansible.builtin.yum:
+        update_cache: yes
+        name: postgresql15-server
+    - ansible.builtin.systemd:
+        name: postgresql-15
+        state: stopped
+      tags:
+        - never
+        - uninstall
+    - file:
+        path: /var/lib/pgsql/15/data/
+        state: absent
+      tags:
+        - never
+        - uninstall
+    - ansible.builtin.command: /usr/pgsql-15/bin/postgresql-15-setup initdb
+    - ansible.builtin.lineinfile:
+        dest: /var/lib/pgsql/15/data/postgresql.conf
+        regexp: listen_addresses
+        line: listen_addresses = '0.0.0.0'
+    - ansible.builtin.lineinfile:
+        dest: /var/lib/pgsql/15/data/pg_hba.conf
+        regexp: 'host    all             all             127.0.0.1/32            scram-sha-256'
+        line:   'host    all             all             0.0.0.0/0               scram-sha-256'
+    - ansible.builtin.systemd:
+        name: postgresql-15
+        state: started
+        enabled: yes
+    - ansible.builtin.command: psql
+      become_user: postgres
+      args:
+        stdin: |
+          create user {{WEBAPP_DB_USER}} with password '{{WEBAPP_DB_PASSWORD}}';
+          create database {{WEBAPP_DB_NAME}} with owner {{WEBAPP_DB_USER}};

@@ -3,6 +3,15 @@
   become: yes
   gather_facts: no
   tasks:
+    - name: remove timedhosts.txt
+      ansible.builtin.file:
+        path: /var/cache/yum/x86_64/7/timedhosts.txt
+        state: absent
+    - name: exclude mirrors.datahouse.ru
+      ansible.builtin.lineinfile:
+        dest: /etc/yum/pluginconf.d/fastestmirror.conf
+        regexp: '^#?exclude=.*'
+        line: exclude=mirrors.datahouse.ru
     - name: epel-release
       ansible.builtin.command: yum install -y epel-release
     - name: install nginx
@@ -38,13 +47,20 @@
     - name: check nginx
       ansible.builtin.uri:
         url: http://{{inventory_hostname}}:{{load_balancer_port}}
-        status_code: [200,301,302,403]
-        follow_redirects: no
 
 - hosts: bastion
   become: yes
   gather_facts: no
   tasks:
+    - name: remove timedhosts.txt
+      ansible.builtin.file:
+        path: /var/cache/yum/x86_64/7/timedhosts.txt
+        state: absent
+    - name: exclude mirrors.datahouse.ru
+      ansible.builtin.lineinfile:
+        dest: /etc/yum/pluginconf.d/fastestmirror.conf
+        regexp: '^#?exclude=.*'
+        line: exclude=mirrors.datahouse.ru
     - name: epel-release
       ansible.builtin.command: yum install -y epel-release
     - name: install nginx
@@ -84,15 +100,13 @@
         delay: 0
         timeout: 3
       ignore_errors: yes
-    - ansible.builtin.uri:
-        url: http://{{public_ip}}/wordpress/wp-admin/install.php?step=2
+    - name: upload
+      ansible.builtin.uri:
+        url: http://{{public_ip}}/upload
         method: POST
-        body_format: form-urlencoded
-        body:
-          weblog_title: otus
-          user_name: admin
-          admin_password: bQ2vSkWKzP4kGRDi
-          admin_password2: bQ2vSkWKzP4kGRDi
-          admin_email: test@example.com
-          Submit: Install WordPress
-          language: ''
+        body: hello world
+        return_content: true
+      register: this
+    - name: download
+      ansible.builtin.uri:
+        url: http://{{public_ip}}/file/{{this.json.id}}
