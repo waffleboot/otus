@@ -1,8 +1,17 @@
 ---
-- hosts: db
+- hosts: gfs2_source
   become: yes
   gather_facts: no
   tasks:
+    - name: remove timedhosts.txt
+      ansible.builtin.file:
+        path: /var/cache/yum/x86_64/7/timedhosts.txt
+        state: absent
+    - name: exclude mirrors.datahouse.ru
+      ansible.builtin.lineinfile:
+        dest: /etc/yum/pluginconf.d/fastestmirror.conf
+        regexp: '^#?exclude=.*'
+        line: exclude=mirrors.datahouse.ru
     - name: Create file
       community.general.filesize:
         path: /var/run/disk
@@ -31,6 +40,15 @@
   become: true
   gather_facts: no
   tasks:
+    - name: remove timedhosts.txt
+      ansible.builtin.file:
+        path: /var/cache/yum/x86_64/7/timedhosts.txt
+        state: absent
+    - name: exclude mirrors.datahouse.ru
+      ansible.builtin.lineinfile:
+        dest: /etc/yum/pluginconf.d/fastestmirror.conf
+        regexp: '^#?exclude=.*'
+        line: exclude=mirrors.datahouse.ru
     - name: Install pacemaker
       ansible.builtin.yum:
         name:
@@ -88,7 +106,7 @@
     - name: Login to target
       command: iscsiadm -m node -l -T {{ gfs2_target }}
 
-- hosts: db
+- hosts: gfs2_source
   gather_facts: no
   tasks:
     - command: targetcli ls
@@ -162,4 +180,4 @@
   gather_facts: no
   tasks:
     - name: Change owner
-      command: chown apache:apache /var/www/html/wordpress/wp-content/uploads
+      command: chown webapp:webapp {{gfs2_mount_dir}}
