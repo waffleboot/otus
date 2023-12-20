@@ -9,7 +9,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/waffleboot/app/adapter"
+	"github.com/waffleboot/app/adapter/database"
+	"github.com/waffleboot/app/adapter/files"
+	"github.com/waffleboot/app/adapter/web"
 	"github.com/waffleboot/app/domain"
 	"golang.org/x/sync/errgroup"
 )
@@ -38,7 +40,7 @@ func run(portNum int, connStr, staticDir string) error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	pg, err := adapter.NewPostgresClient(ctx, connStr, 5*time.Second)
+	pg, err := database.NewPostgresClient(ctx, connStr, 5*time.Second)
 	if err != nil {
 		return fmt.Errorf("new postgres client: %w", err)
 	}
@@ -48,7 +50,7 @@ func run(portNum int, connStr, staticDir string) error {
 		return fmt.Errorf("initialize: %w", err)
 	}
 
-	storage, err := adapter.NewStorage(staticDir)
+	storage, err := files.NewStorage(staticDir)
 	if err != nil {
 		return fmt.Errorf("storage: %w", err)
 	}
@@ -65,11 +67,11 @@ func run(portNum int, connStr, staticDir string) error {
 
 func startServer(ctx context.Context, svc *domain.Service, port int) error {
 
-	srv, err := adapter.NewServer(
-		adapter.WithHttpPort(port),
-		adapter.WithCreateUseCase(svc),
-		adapter.WithGetFileUseCase(svc),
-		adapter.WithGetFilesUseCase(svc))
+	srv, err := web.NewServer(
+		web.WithHttpPort(port),
+		web.WithCreateUseCase(svc),
+		web.WithGetFileUseCase(svc),
+		web.WithGetFilesUseCase(svc))
 	if err != nil {
 		return fmt.Errorf("new server: %w", err)
 	}
