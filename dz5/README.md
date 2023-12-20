@@ -4,33 +4,19 @@
 
 # Домашнее задание
 
-Развернуть InnoDB или PXC кластер
+Реализация кластера postgreSQL с помощью patroni
 
 # Цель:
 
-Перевести базу веб-проекта на один из вариантов кластера MySQL:
-- Percona XtraDB Cluster
-- или InnoDB Cluster.
+Перевести БД веб проекта на кластер postgreSQL с ипользованием patroni, etcd/consul/zookeeper и haproxy/pgbouncer
 
-# Описание/Пошаговая инструкция выполнения домашнего задания:
+# Описание/Пошаговая инструкция выполнения домашнего задания
 
-- Разворачиваем отказоустойчивый кластер MySQL (PXC || Innodb) на ВМ или в докере любым способом
-- Создаем внутри кластера вашу БД для проекта
-
-# Лекция
-
-- mysql innodb cluster
-- percona xtradb cluster (pxc)
-
-# Ссылки
-
-https://stackoverflow.com/questions/38847824/ansible-how-to-get-service-status-by-ansible
-https://docs.percona.com/percona-xtradb-cluster/8.0/encrypt-traffic.html
-https://docs.percona.com/percona-xtradb-cluster/8.0/encrypt-traffic.html#generate-keys-and-certificates-manually
+Перевести БД веб проекта на кластер postgreSQL с ипользованием patroni, etcd/consul/zookeeper и haproxy/pgbouncer.
 
 # Порядок запуска
 
-- mysql_install.sh
+- pg_install.sh
 - wordpress_install.sh
 - nginx_install.sh
 - gfs2_install.sh
