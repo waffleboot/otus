@@ -69,12 +69,7 @@ func run(portNum int, connStr, staticDir string) error {
 
 func startServer(ctx context.Context, svc *domain.Service, port int) error {
 
-	srv, err := web.NewServer(
-		web.WithHttpPort(port),
-		web.WithCreateUseCase(svc),
-		web.WithGetFileUseCase(svc),
-		web.WithGetFilesUseCase(svc),
-		web.WithTestUseCase(svc))
+	srv, err := web.NewServer(web.WithHttpPort(port), web.WithService(svc))
 	if err != nil {
 		return fmt.Errorf("new server: %w", err)
 	}

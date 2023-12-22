@@ -24,6 +24,13 @@ func (f optionFunc) apply(s *config) error {
 	return f(s)
 }
 
+type Service interface {
+	usecase.CreateFileUseCase
+	usecase.ListFilesUseCase
+	usecase.GetFileUseCase
+	usecase.TestUseCase
+}
+
 type Server struct {
 	srv *http.Server
 }
@@ -61,7 +68,25 @@ func WithHttpPort(port int) Option {
 	})
 }
 
-func WithCreateUseCase(svc usecase.CreateFileUseCase) Option {
+func WithService(svc Service) Option {
+	opts := []Option{
+		WithTestUseCase(svc),
+		WithCreateUseCase(svc),
+		WithGetFileUseCase(svc),
+		WithGetFilesUseCase(svc),
+	}
+	return optionFunc(func(c *config) error {
+		for _, opt := range opts {
+			err := opt.apply(c)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func WithCreateUseCase(svc Service) Option {
 	return optionFunc(func(c *config) error {
 		c.router.POST("/upload", func(c *gin.Context) {
 			data, err := io.ReadAll(c.Request.Body)
@@ -82,7 +107,7 @@ func WithCreateUseCase(svc usecase.CreateFileUseCase) Option {
 	})
 }
 
-func WithGetFileUseCase(svc usecase.GetFileUseCase) Option {
+func WithGetFileUseCase(svc Service) Option {
 	return optionFunc(func(c *config) error {
 		c.router.GET("/file/:id", func(c *gin.Context) {
 			strID := c.Param("id")
@@ -105,7 +130,7 @@ func WithGetFileUseCase(svc usecase.GetFileUseCase) Option {
 	})
 }
 
-func WithGetFilesUseCase(svc usecase.ListFilesUseCase) Option {
+func WithGetFilesUseCase(svc Service) Option {
 	return optionFunc(func(c *config) error {
 		c.router.GET("/", func(c *gin.Context) {
 			ids, err := svc.GetFiles(c.Request.Context())
@@ -123,7 +148,7 @@ func WithGetFilesUseCase(svc usecase.ListFilesUseCase) Option {
 	})
 }
 
-func WithTestUseCase(svc usecase.TestUseCase) Option {
+func WithTestUseCase(svc Service) Option {
 	return optionFunc(func(c *config) error {
 		c.router.GET("/test", func(c *gin.Context) {
 			err := svc.Test(c.Request.Context())
