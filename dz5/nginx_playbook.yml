@@ -3,15 +3,6 @@
   become: yes
   gather_facts: no
   tasks:
-    - name: remove timedhosts.txt
-      ansible.builtin.file:
-        path: /var/cache/yum/x86_64/7/timedhosts.txt
-        state: absent
-    - name: exclude mirrors.datahouse.ru
-      ansible.builtin.lineinfile:
-        dest: /etc/yum/pluginconf.d/fastestmirror.conf
-        regexp: '^#?exclude=.*'
-        line: exclude=mirrors.datahouse.ru
     - name: epel-release
       ansible.builtin.command: yum install -y epel-release
     - name: install nginx
@@ -52,15 +43,6 @@
   become: yes
   gather_facts: no
   tasks:
-    - name: remove timedhosts.txt
-      ansible.builtin.file:
-        path: /var/cache/yum/x86_64/7/timedhosts.txt
-        state: absent
-    - name: exclude mirrors.datahouse.ru
-      ansible.builtin.lineinfile:
-        dest: /etc/yum/pluginconf.d/fastestmirror.conf
-        regexp: '^#?exclude=.*'
-        line: exclude=mirrors.datahouse.ru
     - name: epel-release
       ansible.builtin.command: yum install -y epel-release
     - name: install nginx

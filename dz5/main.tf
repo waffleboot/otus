@@ -30,28 +30,49 @@ resource yandex_vpc_route_table rt {
   }
 }
 
-resource yandex_lb_network_load_balancer load_balancer {
+resource yandex_lb_network_load_balancer nginx_load_balancer {
   type = "internal"
   listener {
     name = "nginx"
-    port = var.load_balancer.port
+    port = var.nginx_load_balancer.port
     internal_address_spec {
       subnet_id = yandex_vpc_subnet.subnet.id
-      address = var.load_balancer.addr
+      address = var.nginx_load_balancer.addr
     }
   }
   attached_target_group {
-    target_group_id = yandex_lb_target_group.target_group.id
+    target_group_id = yandex_lb_target_group.nginx_target_group.id
     healthcheck {
       name = "tcp"
       tcp_options {
-        port = var.load_balancer.port
+        port = var.nginx_load_balancer.port
       }
     }
   }
 }
 
-resource yandex_lb_target_group target_group {
+resource yandex_lb_network_load_balancer haproxy_load_balancer {
+  type = "internal"
+  listener {
+    name = "haproxy"
+    port = var.haproxy_load_balancer.port
+    internal_address_spec {
+      subnet_id = yandex_vpc_subnet.subnet.id
+      address = var.haproxy_load_balancer.addr
+    }
+  }
+  attached_target_group {
+    target_group_id = yandex_lb_target_group.haproxy_target_group.id
+    healthcheck {
+      name = "tcp"
+      tcp_options {
+        port = var.haproxy_load_balancer.port
+      }
+    }
+  }
+}
+
+resource yandex_lb_target_group nginx_target_group {
   target {
     subnet_id = yandex_vpc_subnet.subnet.id
     address = "192.168.0.21"
@@ -59,6 +80,21 @@ resource yandex_lb_target_group target_group {
   target {
     subnet_id = yandex_vpc_subnet.subnet.id
     address = "192.168.0.22"
+  }
+}
+
+resource yandex_lb_target_group haproxy_target_group {
+  target {
+    subnet_id = yandex_vpc_subnet.subnet.id
+    address = "192.168.0.41"
+  }
+  target {
+    subnet_id = yandex_vpc_subnet.subnet.id
+    address = "192.168.0.42"
+  }
+  target {
+    subnet_id = yandex_vpc_subnet.subnet.id
+    address = "192.168.0.43"
   }
 }
 
@@ -96,19 +132,12 @@ resource tls_private_key key {
   }
 }
 
-resource random_password pg_password {
-  length = 16
-  special = true
-  override_special = "_%@"
-}
-
 resource local_file inventory-ini {
   content = templatefile("inventory.tftpl",{
     bastion  = local.bastion
     ssh_user = var.ssh_user
-    load_balancer_addr = var.load_balancer.addr
-    load_balancer_port = var.load_balancer.port
-    pg_password = random_password.pg_password.result
+    load_balancer_addr = var.nginx_load_balancer.addr
+    load_balancer_port = var.nginx_load_balancer.port
   })
   filename = "inventory.ini"
   provisioner remote-exec {

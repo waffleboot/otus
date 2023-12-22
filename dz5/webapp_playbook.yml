@@ -36,7 +36,7 @@
           Type=simple
           User=webapp
           Group=webapp
-          ExecStart=/usr/local/bin/webapp --port {{load_balancer_port}} --conn postgres://{{WEBAPP_DB_USER}}:{{WEBAPP_DB_PASSWORD}}@{{WEBAPP_DB_HOST}}:5432/{{WEBAPP_DB_NAME}} --static {{gfs2_mount_dir}}
+          ExecStart=/usr/local/bin/webapp --port {{load_balancer_port}} --conn postgres://{{WEBAPP_DB_USER}}:{{WEBAPP_DB_PASSWORD}}@{{WEBAPP_DB_HOST}}/{{WEBAPP_DB_NAME}} --static {{gfs2_mount_dir}}
           Restart=always
 
           AmbientCapabilities=CAP_NET_BIND_SERVICE

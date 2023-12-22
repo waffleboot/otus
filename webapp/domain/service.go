@@ -3,6 +3,7 @@ package domain
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/waffleboot/app/port/repo"
@@ -28,7 +29,7 @@ func (s *Service) CreateFile(ctx context.Context, content []byte) (uuid.UUID, er
 		return uuid.Nil, fmt.Errorf("put file: %w", err)
 	}
 
-	err = s.metadata.Put(ctx, id)
+	err = s.metadata.Put(ctx, id, time.Now())
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("add metadata: %w", err)
 	}

@@ -8,7 +8,7 @@ variable ssh_user {
     default = "centos"
 }
 
-variable load_balancer {
+variable nginx_load_balancer {
     type = object({
         addr = string
         port = number
@@ -16,6 +16,17 @@ variable load_balancer {
     default = {
         addr = "192.168.0.254"
         port = 80
+    }
+}
+
+variable haproxy_load_balancer {
+    type = object({
+        addr = string
+        port = number
+    })
+    default = {
+        addr = "192.168.0.251"
+        port = 5000
     }
 }
 

@@ -24,8 +24,8 @@ ansible_ssh_common_args='-oProxyCommand="ssh -o StrictHostKeyChecking=accept-new
 
 WEBAPP_DB_NAME=webapp_db
 WEBAPP_DB_USER=webapp_user
-WEBAPP_DB_PASSWORD=${pg_password}
-WEBAPP_DB_HOST=db-1.ru-central1.internal
+WEBAPP_DB_PASSWORD=webapp_password
+WEBAPP_DB_HOST=192.168.0.251:5000
 
 load_balancer_addr=${load_balancer_addr}
 load_balancer_port=${load_balancer_port}

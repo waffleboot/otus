@@ -62,6 +62,8 @@ func run(portNum int, connStr, staticDir string) error {
 		return fmt.Errorf("start server: %w", err)
 	}
 
+	pg.Close()
+
 	return nil
 }
 
