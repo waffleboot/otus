@@ -49,3 +49,11 @@ func (s *Service) GetFile(ctx context.Context, id uuid.UUID) ([]byte, error) {
 func (s *Service) GetFiles(ctx context.Context) ([]uuid.UUID, error) {
 	return s.metadata.All(ctx)
 }
+
+func (s *Service) Test(ctx context.Context) error {
+	_, err := s.CreateFile(ctx, []byte("test"))
+	if err != nil {
+		return fmt.Errorf("create file: %w", err)
+	}
+	return nil
+}

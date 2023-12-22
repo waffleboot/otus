@@ -113,9 +113,25 @@ func WithGetFilesUseCase(svc usecase.ListFilesUseCase) Option {
 				c.String(http.StatusBadRequest, err.Error())
 				return
 			}
+			fmt.Fprint(c.Writer, `<html><body><ul><li><a href="test">test</a></li>`)
 			for _, id := range ids {
-				fmt.Fprintln(c.Writer, id)
+				fmt.Fprintf(c.Writer, `<li><a href="file/%s">%s</a></li>`, id, id)
 			}
+			fmt.Fprint(c.Writer, "</ul></body></html>")
+		})
+		return nil
+	})
+}
+
+func WithTestUseCase(svc usecase.TestUseCase) Option {
+	return optionFunc(func(c *config) error {
+		c.router.GET("/test", func(c *gin.Context) {
+			err := svc.Test(c.Request.Context())
+			if err != nil {
+				c.String(http.StatusBadRequest, err.Error())
+				return
+			}
+			fmt.Fprint(c.Writer, "ok")
 		})
 		return nil
 	})
