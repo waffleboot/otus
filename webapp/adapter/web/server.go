@@ -131,7 +131,7 @@ func WithTestUseCase(svc usecase.TestUseCase) Option {
 				c.String(http.StatusBadRequest, err.Error())
 				return
 			}
-			fmt.Fprint(c.Writer, "ok")
+			c.Redirect(http.StatusFound, "/")
 		})
 		return nil
 	})
