@@ -7,7 +7,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type (
@@ -29,7 +30,7 @@ func NewPostgresClient(ctx context.Context, connStr string, connTimeout time.Dur
 	timeoutCtx, cancel := context.WithTimeout(ctx, connTimeout)
 	defer cancel()
 
-	pool, err := pgxpool.ConnectConfig(timeoutCtx, config)
+	pool, err := pgxpool.NewWithConfig(timeoutCtx, config)
 	if err != nil {
 		return nil, fmt.Errorf("connect: %w", err)
 	}
@@ -64,6 +65,9 @@ func (s *postgresClient) Get(ctx context.Context, id uuid.UUID) error {
 
 func (s *postgresClient) Put(ctx context.Context, id uuid.UUID, at time.Time) error {
 	_, err := s.pool.Exec(ctx, "insert into webapp.metadata (id,created_at) values ($1,$2)", id, at)
+	if err != nil && s.readOnly(ctx, err) {
+		_, err = s.pool.Exec(ctx, "insert into webapp.metadata (id,created_at) values ($1,$2)", id, at)
+	}
 	if err != nil {
 		return fmt.Errorf("insert: %w", err)
 	}
@@ -97,4 +101,16 @@ func (s *postgresClient) All(ctx context.Context) ([]uuid.UUID, error) {
 
 func (s *postgresClient) Close() {
 	s.pool.Close()
+}
+
+func (s *postgresClient) readOnly(ctx context.Context, err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.SQLState() == "25006" {
+		for _, c := range s.pool.AcquireAllIdle(ctx) {
+			c.Conn().Close(ctx)
+			c.Release()
+		}
+		return true
+	}
+	return false
 }
