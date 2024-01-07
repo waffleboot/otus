@@ -70,7 +70,6 @@
             "client_addr": "0.0.0.0",
             "node_name": "{{ inventory_hostname_short }}",
             "data_dir": "/var/lib/consul",
-            "encrypt": "wHFWVHTstpfh08ZflUs4FD2FAMueraoCN2LyqmeLxV0=",
             "retry_join": [{{ groups['db'] | map('to_json') | join(',') }}],
             "server": true,
             "ui_config": { "enabled": true }
@@ -80,8 +79,6 @@
         dest: /etc/systemd/system/consul.service
         content: |
           [Unit]
-          Description=Consul Service Discovery Agent
-          Documentation=https://www.consul.io/
           After=network-online.target
           Wants=network-online.target
 
@@ -119,7 +116,6 @@
             "client_addr": "0.0.0.0",
             "node_name": "{{ inventory_hostname_short }}",
             "data_dir": "/var/lib/consul",
-            "encrypt": "wHFWVHTstpfh08ZflUs4FD2FAMueraoCN2LyqmeLxV0=",
             "retry_join": [{{ groups['db'] | map('to_json') | join(',') }}]
           }
     - name: systemd service
@@ -127,8 +123,6 @@
         dest: /etc/systemd/system/consul.service
         content: |
           [Unit]
-          Description=Consul Service Discovery Agent
-          Documentation=https://www.consul.io/
           After=network-online.target
           Wants=network-online.target
 
