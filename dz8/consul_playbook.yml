@@ -8,55 +8,29 @@
     consul_version: 1.17.1
     consul_archive: consul_{{ consul_version }}_linux_amd64.zip
   tasks:
-    - file:
-        path: /usr/local/bin/consul
-        state: absent
-    - file:
-        path: /opt/consul
-        state: absent
-    - file:
-        path: /etc/consul.d
-        state: absent
-#     - name: create group
-#       ansible.builtin.group:
-#         name: consul
-#     - name: create user
-#       ansible.builtin.user:
-#         name: consul
-#         group: consul
-#         create_home: no
-#         system: yes
-#     - name: download consul {{ consul_version }}
-#       ansible.builtin.get_url:
-#         url: https://hashicorp-releases.yandexcloud.net/consul/{{ consul_version }}/{{ consul_archive }}
-#         dest: /tmp/{{ consul_archive }}
-    # - name: install addons
-    #   ansible.builtin.yum:
-    #     state: latest
-    #     pkg:
-    #       - unzip
-    #       - telnet
+    - name: download consul {{ consul_version }}
+      ansible.builtin.get_url:
+        url: https://hashicorp-releases.yandexcloud.net/consul/{{ consul_version }}/{{ consul_archive }}
+        dest: /tmp/{{ consul_archive }}
+    - name: install addons
+      ansible.builtin.yum:
+        state: latest
+        pkg:
+          - unzip
+          - telnet
     - name: unzip {{ consul_archive }}
       ansible.builtin.unarchive:
         src: /tmp/{{ consul_archive }}
         dest: /usr/local/bin
         remote_src: yes
-#     - file:
-#         path: /usr/local/bin/consul
-#         owner: consul
-#         group: consul
     - name: create /etc/consul.d directory
       file:
         path: /etc/consul.d
         state: directory
-#         group: consul
-#         owner: consul
     - name: create /opt/consul directory
       file:
         path: /opt/consul
         state: directory
-#         group: consul
-#         owner: consul
 
 - hosts:
     - db
@@ -66,9 +40,6 @@
     - name: create consul.json
       ansible.builtin.copy:
         dest: /etc/consul.d/consul.json
-        # group: consul
-        # owner: consul
-        # mode: '0644'
         content: |
           {
             "server": true,
@@ -89,8 +60,6 @@
 
           [Service]
           Type=simple
-          # User=consul
-          # Group=consul
           ExecStart=/usr/local/bin/consul agent -config-dir=/etc/consul.d -bind 0.0.0.0
           WorkingDirectory=/opt/consul
           Restart=always
@@ -137,8 +106,6 @@
 
           [Service]
           Type=simple
-          # User=consul
-          # Group=consul
           ExecStart=/usr/local/bin/consul agent -config-dir=/etc/consul.d -bind 0.0.0.0
           WorkingDirectory=/opt/consul
           Restart=always
