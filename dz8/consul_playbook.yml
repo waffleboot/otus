@@ -8,6 +8,12 @@
     consul_version: 1.17.1
     consul_archive: consul_{{ consul_version }}_linux_amd64.zip
   tasks:
+    - file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - /etc/consul.d
+        - /var/lib/consul
     - name: create group
       ansible.builtin.group:
         name: consul
