@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -13,41 +14,42 @@ import (
 	"github.com/waffleboot/app/adapter/files"
 	"github.com/waffleboot/app/adapter/web"
 	"github.com/waffleboot/app/domain"
+	"github.com/waffleboot/app/port/repo"
 	"golang.org/x/sync/errgroup"
 )
 
 func main() {
-
-	var (
-		portNum   int
-		connStr   string
-		staticDir string
-	)
-
-	flag.IntVar(&portNum, "port", 0, "http port")
-	flag.StringVar(&connStr, "conn", "", "conn string")
-	flag.StringVar(&staticDir, "static", "", "static dir")
-	flag.Parse()
-
-	err := run(portNum, connStr, staticDir)
+	err := run()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 }
 
-func run(portNum int, connStr, staticDir string) error {
+func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
+	return runWithContext(ctx)
+}
 
-	pg, err := database.NewPostgresClient(ctx, connStr, 5*time.Second)
+func runWithContext(ctx context.Context) error {
+	var (
+		portNum   int
+		connStr   string
+		staticDir string
+	)
+
+	rootFlagSet := flag.NewFlagSet("", flag.ContinueOnError)
+	rootFlagSet.IntVar(&portNum, "port", 0, "http port")
+	rootFlagSet.StringVar(&staticDir, "static", "", "static dir")
+
+	err := rootFlagSet.Parse(os.Args[1:])
 	if err != nil {
-		return fmt.Errorf("new postgres client: %w", err)
+		return err
 	}
 
-	err = pg.Initialize(ctx)
-	if err != nil {
-		return fmt.Errorf("initialize: %w", err)
+	if rootFlagSet.NArg() == 0 {
+		return errors.New("need command")
 	}
 
 	storage, err := files.NewStorage(staticDir)
@@ -55,14 +57,34 @@ func run(portNum int, connStr, staticDir string) error {
 		return fmt.Errorf("storage: %w", err)
 	}
 
-	svc := domain.NewService(pg, storage)
+	var metadata repo.Metadata
+
+	switch cmd := rootFlagSet.Arg(0); cmd {
+	case "memory":
+		metadata = database.NewMemoryDatabase()
+	case "postgres":
+		pg, err := database.NewPostgresClient(ctx, connStr, 5*time.Second)
+		if err != nil {
+			return fmt.Errorf("new postgres client: %w", err)
+		}
+		defer pg.Close()
+
+		err = pg.Initialize(ctx)
+		if err != nil {
+			return fmt.Errorf("initialize: %w", err)
+		}
+
+		metadata = pg
+	default:
+		return fmt.Errorf("unsupported command: %s", cmd)
+	}
+
+	svc := domain.NewService(metadata, storage)
 
 	err = startServer(ctx, svc, portNum)
 	if err != nil {
 		return fmt.Errorf("start server: %w", err)
 	}
-
-	pg.Close()
 
 	return nil
 }

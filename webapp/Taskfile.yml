@@ -7,3 +7,6 @@ tasks:
     env:
       GOOS: linux
       GOARCH: amd64
+  local:
+    cmds:
+      - go build -o webapp .
