@@ -8,6 +8,9 @@
     consul_version: 1.17.1
     consul_archive: consul_{{ consul_version }}_linux_amd64.zip
   tasks:
+    - ansible.builtin.systemd:
+        name: consul
+        state: stopped
     - file:
         path: "{{ item }}"
         state: absent
@@ -71,6 +74,7 @@
             "client_addr": "0.0.0.0",
             "node_name": "{{ inventory_hostname_short }}",
             "data_dir": "/var/lib/consul",
+            "encrypt": "wHFWVHTstpfh08ZflUs4FD2FAMueraoCN2LyqmeLxV0=",
             "retry_join": [{{ groups['db'] | map('to_json') | join(',') }}],
             "server": true,
             "ui_config": { "enabled": true }
@@ -117,6 +121,7 @@
             "client_addr": "0.0.0.0",
             "node_name": "{{ inventory_hostname_short }}",
             "data_dir": "/var/lib/consul",
+            "encrypt": "wHFWVHTstpfh08ZflUs4FD2FAMueraoCN2LyqmeLxV0=",
             "retry_join": [{{ groups['db'] | map('to_json') | join(',') }}]
           }
     - name: systemd service
