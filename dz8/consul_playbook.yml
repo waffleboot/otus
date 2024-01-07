@@ -1,0 +1,152 @@
+---
+- hosts:
+    - db
+    - backend
+  become: yes
+  gather_facts: no
+  vars:
+    consul_version: 1.17.1
+    consul_archive: consul_{{ consul_version }}_linux_amd64.zip
+  tasks:
+    - file:
+        path: /usr/local/bin/consul
+        state: absent
+    - file:
+        path: /opt/consul
+        state: absent
+    - file:
+        path: /etc/consul.d
+        state: absent
+#     - name: create group
+#       ansible.builtin.group:
+#         name: consul
+#     - name: create user
+#       ansible.builtin.user:
+#         name: consul
+#         group: consul
+#         create_home: no
+#         system: yes
+#     - name: download consul {{ consul_version }}
+#       ansible.builtin.get_url:
+#         url: https://hashicorp-releases.yandexcloud.net/consul/{{ consul_version }}/{{ consul_archive }}
+#         dest: /tmp/{{ consul_archive }}
+    # - name: install addons
+    #   ansible.builtin.yum:
+    #     state: latest
+    #     pkg:
+    #       - unzip
+    #       - telnet
+    - name: unzip {{ consul_archive }}
+      ansible.builtin.unarchive:
+        src: /tmp/{{ consul_archive }}
+        dest: /usr/local/bin
+        remote_src: yes
+#     - file:
+#         path: /usr/local/bin/consul
+#         owner: consul
+#         group: consul
+    - name: create /etc/consul.d directory
+      file:
+        path: /etc/consul.d
+        state: directory
+#         group: consul
+#         owner: consul
+    - name: create /opt/consul directory
+      file:
+        path: /opt/consul
+        state: directory
+#         group: consul
+#         owner: consul
+
+- hosts:
+    - db
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: create consul.json
+      ansible.builtin.copy:
+        dest: /etc/consul.d/consul.json
+        # group: consul
+        # owner: consul
+        # mode: '0644'
+        content: |
+          {
+            "server": true,
+            "node_name": "{{ inventory_hostname_short }}",
+            "ui_config": {
+              "enabled": true
+            },
+            "data_dir": "/opt/consul",
+            "retry_join": [{{ groups['db'] | difference([inventory_hostname]) | map('to_json') | join(',') }}]
+          }
+    - name: systemd service
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/consul.service
+        content: |
+          [Unit]
+          Description=Consul
+          After=network.target
+
+          [Service]
+          Type=simple
+          # User=consul
+          # Group=consul
+          ExecStart=/usr/local/bin/consul agent -config-dir=/etc/consul.d -bind 0.0.0.0
+          WorkingDirectory=/opt/consul
+          Restart=always
+
+          [Install]
+          WantedBy=default.target
+    - ansible.builtin.systemd:
+        name: consul
+        state: restarted
+        daemon-reload: yes
+        enabled: yes
+
+- hosts:
+    - backend
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: create consul.json
+      ansible.builtin.copy:
+        dest: /etc/consul.d/consul.json
+        content: |
+          {
+            "data_dir": "/opt/consul",
+            "node_name": "{{ inventory_hostname_short }}",
+            "retry_join": [{{ groups['db'] | map('to_json') | join(',') }}],
+            "service": {
+              "name": "webapp",
+              "check": {
+                  "id": "webapp_up",
+                  "name": "webapp healthcheck",
+                  "tcp": "localhost:{{ backend_http_port }}",
+                  "interval": "10s",
+                  "timeout": "2s"
+              }
+            }
+          }
+    - name: systemd service
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/consul.service
+        content: |
+          [Unit]
+          Description=Consul
+          After=network.target
+
+          [Service]
+          Type=simple
+          # User=consul
+          # Group=consul
+          ExecStart=/usr/local/bin/consul agent -config-dir=/etc/consul.d -bind 0.0.0.0
+          WorkingDirectory=/opt/consul
+          Restart=always
+
+          [Install]
+          WantedBy=default.target
+    - ansible.builtin.systemd:
+        name: consul
+        state: restarted
+        daemon-reload: yes
+        enabled: yes
