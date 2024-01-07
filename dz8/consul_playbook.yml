@@ -1,6 +1,7 @@
 ---
 - hosts:
     - db
+    - nginx
     - backend
   become: yes
   gather_facts: no
@@ -11,6 +12,7 @@
     - ansible.builtin.systemd:
         name: consul
         state: stopped
+      ignore_errors: yes
     - file:
         path: "{{ item }}"
         state: absent
@@ -160,3 +162,77 @@
         state: restarted
         daemon-reload: yes
         enabled: yes
+
+- hosts:
+    - nginx
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: create consul config
+      ansible.builtin.copy:
+        dest: /etc/consul.d/config.json
+        owner: consul
+        group: consul
+        content: |
+          {
+            "client_addr": "0.0.0.0",
+            "node_name": "{{ inventory_hostname_short }}",
+            "data_dir": "/var/lib/consul",
+            "encrypt": "wHFWVHTstpfh08ZflUs4FD2FAMueraoCN2LyqmeLxV0=",
+            "retry_join": [{{ groups['db'] | map('to_json') | join(',') }}]
+          }
+    - name: systemd service
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/consul.service
+        content: |
+          [Unit]
+          After=network-online.target
+          Wants=network-online.target
+
+          [Service]
+          Type=simple
+          User=consul
+          Group=consul
+          ExecStart=/usr/local/bin/consul agent -config-dir=/etc/consul.d
+          ExecReload=/bin/kill -HUP $MAINPID
+          KillSignal=SIGINT
+          TimeoutStopSec=5
+          Restart=on-failure
+          SyslogIdentifier=consul
+
+          [Install]
+          WantedBy=multi-user.target
+    - ansible.builtin.systemd:
+        name: consul
+        state: restarted
+        daemon-reload: yes
+        enabled: yes
+    - ansible.builtin.iptables:
+        table: nat
+        chain: PREROUTING
+        protocol: "{{ item }}"
+        match: "{{ item }}"
+        destination_port: 53
+        jump: REDIRECT
+        to_ports: 8600
+      with_items:
+        - udp
+        - tcp
+    - ansible.builtin.iptables:
+        table: nat
+        chain: OUTPUT
+        protocol: "{{ item }}"
+        match: "{{ item }}"
+        destination_port: 53
+        jump: REDIRECT
+        to_ports: 8600
+        destination: localhost
+      with_items:
+        - udp
+        - tcp
+    - ansible.builtin.copy:
+        dest: /etc/resolv.conf
+        content: |
+          search ru-central1.internal auto.internal
+          nameserver 127.0.0.1
+          nameserver 192.168.0.2
