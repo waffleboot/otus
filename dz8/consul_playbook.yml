@@ -125,43 +125,55 @@
   tasks:
     - name: create consul.json
       ansible.builtin.copy:
-        dest: /etc/consul.d/consul.json
+        dest: /etc/consul.d/config.json
         owner: consul
         group: consul
         content: |
           {
-            "data_dir": "/opt/consul",
+            "bind_addr": "0.0.0.0",
+            "bootstrap_expect": 0,
+            "client_addr": "0.0.0.0",
+            "datacenter": "dc1",
             "node_name": "{{ inventory_hostname_short }}",
+            "data_dir": "/var/lib/consul",
+            "domain": "consul",
+            "enable_local_script_checks": true,
+            "dns_config": {
+                "enable_truncate": true,
+                "only_passing": true
+            },
+            "enable_syslog": true,
+            "encrypt": "wHFWVHTstpfh08ZflUs4FD2FAMueraoCN2LyqmeLxV0=",
+            "leave_on_terminate": true,
+            "log_level": "INFO",
+            "rejoin_after_leave": true,
             "retry_join": [{{ groups['db'] | map('to_json') | join(',') }}],
-            "service": {
-              "name": "webapp",
-              "check": {
-                  "id": "webapp_up",
-                  "name": "webapp healthcheck",
-                  "tcp": "localhost:{{ backend_http_port }}",
-                  "interval": "10s",
-                  "timeout": "2s"
-              }
-            }
+            "server": false,
+            "start_join": [{{ groups['db'] | map('to_json') | join(',') }}],
           }
     - name: systemd service
       ansible.builtin.copy:
         dest: /etc/systemd/system/consul.service
         content: |
           [Unit]
-          Description=Consul
-          After=network.target
+          Description=Consul Service Discovery Agent
+          Documentation=https://www.consul.io/
+          After=network-online.target
+          Wants=network-online.target
 
           [Service]
           Type=simple
           User=consul
           Group=consul
-          ExecStart=/usr/local/bin/consul agent -config-dir=/etc/consul.d
-          WorkingDirectory=/opt/consul
-          Restart=always
+          ExecStart=/usr/local/bin/consul agent -dev -config-dir=/etc/consul.d
+          ExecReload=/bin/kill -HUP $MAINPID
+          KillSignal=SIGINT
+          TimeoutStopSec=5
+          Restart=on-failure
+          SyslogIdentifier=consul
 
           [Install]
-          WantedBy=default.target
+          WantedBy=multi-user.target
     - ansible.builtin.systemd:
         name: consul
         state: restarted
