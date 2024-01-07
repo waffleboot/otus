@@ -35,7 +35,7 @@ func NewPostgresClient(ctx context.Context, connStr string, connTimeout time.Dur
 		return nil, fmt.Errorf("connect: %w", err)
 	}
 
-	err = pool.Ping(ctx)
+	err = pool.Ping(timeoutCtx)
 	if err != nil {
 		return nil, fmt.Errorf("ping: %w", err)
 	}
