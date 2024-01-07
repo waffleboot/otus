@@ -4,6 +4,27 @@
     - backend
   become: yes
   gather_facts: no
+  tasks:
+    - ansible.builtin.systemd:
+        name: consul
+        state: stopped
+        daemon-reload: yes
+        enabled: yes
+    - file:
+        path: /usr/local/bin/consul
+        state: absent
+    - file:
+        path: /etc/consul.d
+        state: absent
+    - file:
+        path: /opt/consul.d
+        state: absent
+
+- hosts:
+    - db
+    - backend
+  become: yes
+  gather_facts: no
   vars:
     consul_version: 1.17.1
     consul_archive: consul_{{ consul_version }}_linux_amd64.zip
@@ -60,7 +81,7 @@
 
           [Service]
           Type=simple
-          ExecStart=/usr/local/bin/consul agent -config-dir=/etc/consul.d -bind 0.0.0.0
+          ExecStart=/usr/local/bin/consul agent -config-dir=/etc/consul.d
           WorkingDirectory=/opt/consul
           Restart=always
 
@@ -106,7 +127,7 @@
 
           [Service]
           Type=simple
-          ExecStart=/usr/local/bin/consul agent -config-dir=/etc/consul.d -bind 0.0.0.0
+          ExecStart=/usr/local/bin/consul agent -config-dir=/etc/consul.d
           WorkingDirectory=/opt/consul
           Restart=always
 
