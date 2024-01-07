@@ -3,6 +3,9 @@
   become: yes
   gather_facts: no
   tasks:
+    - name: httpd_can_network_connect
+      ansible.builtin.command: setsebool -P httpd_can_network_connect 1
+      async: 120
     - name: epel-release
       ansible.builtin.command: yum install -y epel-release
     - name: install nginx
@@ -27,9 +30,6 @@
               }
             }
           }
-    - name: httpd_can_network_connect
-      ansible.builtin.command: setsebool -P httpd_can_network_connect 1
-      async: 120
     - name: start nginx
       ansible.builtin.systemd:
         name: nginx
