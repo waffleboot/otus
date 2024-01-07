@@ -1,0 +1,94 @@
+---
+- hosts: nginx
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: epel-release
+      ansible.builtin.command: yum install -y epel-release
+    - name: install nginx
+      ansible.builtin.yum:
+        update_cache: yes
+        name: nginx
+    - name: nginx.conf
+      ansible.builtin.copy:
+        dest: /etc/nginx/nginx.conf
+        content: |
+          events {}
+          http {
+            upstream backend {
+              hash $http_x_real_ip;
+              server backend-1.ru-central1.internal:{{backend_http_port}};
+              server backend-2.ru-central1.internal:{{backend_http_port}};
+            }
+            server {
+              listen {{nginx_load_balancer_port}};
+              location / {
+                proxy_pass http://backend;
+              }
+            }
+          }
+    - name: httpd_can_network_connect
+      ansible.builtin.command: setsebool -P httpd_can_network_connect 1
+      async: 120
+    - name: start nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: started
+        enabled: yes
+    - name: check nginx
+      ansible.builtin.uri:
+        url: http://{{inventory_hostname}}:{{load_balancer_port}}
+
+- hosts: bastion
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: epel-release
+      ansible.builtin.command: yum install -y epel-release
+    - name: install nginx
+      ansible.builtin.yum:
+        update_cache: yes
+        name: nginx
+    - name: nginx.conf
+      ansible.builtin.copy:
+        dest: /etc/nginx/nginx.conf
+        content: |
+          events {}
+          http {
+            server {
+              listen {{nginx_load_balancer_port}};
+              proxy_set_header X-Real-IP $remote_addr;
+              location / {
+                proxy_pass http://{{nginx_load_balancer_addr}}:{{nginx_load_balancer_port}};
+              }
+            }
+          }
+    - name: httpd_can_network_connect
+      ansible.builtin.command: setsebool -P httpd_can_network_connect 1
+      async: 120
+      poll: 0
+    - name: start nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: started
+        enabled: yes
+      async: 120
+      poll: 0
+    - name: wait
+      ansible.builtin.wait_for:
+        host: '{{public_ip}}'
+        port: '{{nginx_load_balancer_port}}'
+        state: started
+        delay: 0
+        timeout: 3
+      ignore_errors: yes
+    - name: upload
+      ansible.builtin.uri:
+        url: http://{{public_ip}}/upload
+        method: POST
+        body: hello world
+        return_content: true
+      register: this
+    - name: download
+      ansible.builtin.uri:
+        url: http://{{public_ip}}/file/{{this.json.id}}

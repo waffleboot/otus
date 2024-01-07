@@ -1,0 +1,67 @@
+---
+- hosts: backend
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: create group
+      ansible.builtin.group:
+        name: webapp
+    - name: create user
+      ansible.builtin.user:
+        name: webapp
+        group: webapp
+        create_home: no
+        system: yes
+    - name: copy webapp
+      ansible.builtin.copy:
+        src: ../webapp/webapp
+        dest: /usr/local/bin/
+        owner: webapp
+        group: webapp
+        mode: '0555'
+    - file:
+        path: '{{gfs2_mount_dir}}'
+        state: directory
+        owner: webapp
+        group: webapp
+    - name: systemd service
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/webapp.service
+        content: |
+          [Unit]
+          Description=My web server
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=webapp
+          Group=webapp
+          ExecStart=/usr/local/bin/webapp --port {{backend_http_port}} --conn postgres://{{WEBAPP_DB_USER}}:{{WEBAPP_DB_PASSWORD}}@{{WEBAPP_DB_HOST}}/{{WEBAPP_DB_NAME}} --static {{gfs2_mount_dir}}
+          Restart=always
+
+          AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+          [Install]
+          WantedBy=default.target
+    - ansible.builtin.systemd:
+        name: webapp
+        state: restarted
+        daemon-reload: yes
+        enabled: yes
+    - name: wait
+      ansible.builtin.wait_for:
+        port: '{{backend_http_port}}'
+        state: started
+        delay: 0
+        timeout: 3
+      ignore_errors: yes
+    - name: upload
+      ansible.builtin.uri:
+        url: http://localhost:{{backend_http_port}}/upload
+        method: POST
+        body: hello world
+        return_content: true
+      register: this
+    - name: download
+      ansible.builtin.uri:
+        url: http://localhost:{{backend_http_port}}/file/{{this.json.id}}
