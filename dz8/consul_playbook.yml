@@ -60,15 +60,13 @@
   become: yes
   gather_facts: no
   tasks:
-    - name: create consul.json
+    - name: create consul config
       ansible.builtin.copy:
         dest: /etc/consul.d/config.json
         owner: consul
         group: consul
         content: |
           {
-            "bind_addr": "0.0.0.0",
-            "bootstrap_expect": 3,
             "client_addr": "0.0.0.0",
             "node_name": "{{ inventory_hostname_short }}",
             "data_dir": "/var/lib/consul",
@@ -111,15 +109,13 @@
   become: yes
   gather_facts: no
   tasks:
-    - name: create consul.json
+    - name: create consul config
       ansible.builtin.copy:
         dest: /etc/consul.d/config.json
         owner: consul
         group: consul
         content: |
           {
-            "bind_addr": "0.0.0.0",
-            "bootstrap_expect": 0,
             "client_addr": "0.0.0.0",
             "node_name": "{{ inventory_hostname_short }}",
             "data_dir": "/var/lib/consul",
