@@ -33,6 +33,7 @@
         pkg:
           - unzip
           - telnet
+          - bind-utils
     - name: unzip {{ consul_archive }}
       ansible.builtin.unarchive:
         src: /tmp/{{ consul_archive }}
