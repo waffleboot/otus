@@ -37,7 +37,7 @@
         enabled: yes
     - name: check nginx
       ansible.builtin.uri:
-        url: http://{{inventory_hostname}}:{{load_balancer_port}}
+        url: http://{{inventory_hostname}}:{{backend_http_port}}
 
 - hosts: bastion
   become: yes
