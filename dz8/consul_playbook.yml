@@ -40,12 +40,14 @@
         state: directory
         owner: consul
         group: consul
-    - name: create /opt/consul directory
+        mode: '0775'
+    - name: create /var/lib/consul directory
       file:
-        path: /opt/consul
+        path: /var/lib/consul
         state: directory
         owner: consul
         group: consul
+        mode: '0775'
 
 - hosts:
     - db
