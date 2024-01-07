@@ -4,31 +4,19 @@
     - backend
   become: yes
   gather_facts: no
-  tasks:
-    - ansible.builtin.systemd:
-        name: consul
-        state: stopped
-        daemon-reload: yes
-        enabled: yes
-    - file:
-        path: /usr/local/bin/consul
-        state: absent
-    - file:
-        path: /etc/consul.d
-        state: absent
-    - file:
-        path: /opt/consul.d
-        state: absent
-
-- hosts:
-    - db
-    - backend
-  become: yes
-  gather_facts: no
   vars:
     consul_version: 1.17.1
     consul_archive: consul_{{ consul_version }}_linux_amd64.zip
   tasks:
+    - name: create group
+      ansible.builtin.group:
+        name: consul
+    - name: create user
+      ansible.builtin.user:
+        name: consul
+        group: consul
+        create_home: no
+        system: yes
     - name: download consul {{ consul_version }}
       ansible.builtin.get_url:
         url: https://hashicorp-releases.yandexcloud.net/consul/{{ consul_version }}/{{ consul_archive }}
@@ -43,15 +31,21 @@
       ansible.builtin.unarchive:
         src: /tmp/{{ consul_archive }}
         dest: /usr/local/bin
+        owner: consul
+        group: consul
         remote_src: yes
     - name: create /etc/consul.d directory
       file:
         path: /etc/consul.d
         state: directory
+        owner: consul
+        group: consul
     - name: create /opt/consul directory
       file:
         path: /opt/consul
         state: directory
+        owner: consul
+        group: consul
 
 - hosts:
     - db
@@ -61,6 +55,8 @@
     - name: create consul.json
       ansible.builtin.copy:
         dest: /etc/consul.d/consul.json
+        owner: consul
+        group: consul
         content: |
           {
             "server": true,
@@ -81,6 +77,8 @@
 
           [Service]
           Type=simple
+          User=consul
+          Group=consul
           ExecStart=/usr/local/bin/consul agent -config-dir=/etc/consul.d
           WorkingDirectory=/opt/consul
           Restart=always
@@ -101,6 +99,8 @@
     - name: create consul.json
       ansible.builtin.copy:
         dest: /etc/consul.d/consul.json
+        owner: consul
+        group: consul
         content: |
           {
             "data_dir": "/opt/consul",
@@ -127,6 +127,8 @@
 
           [Service]
           Type=simple
+          User=consul
+          Group=consul
           ExecStart=/usr/local/bin/consul agent -config-dir=/etc/consul.d
           WorkingDirectory=/opt/consul
           Restart=always
