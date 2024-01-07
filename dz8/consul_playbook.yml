@@ -122,7 +122,16 @@
             "node_name": "{{ inventory_hostname_short }}",
             "data_dir": "/var/lib/consul",
             "encrypt": "wHFWVHTstpfh08ZflUs4FD2FAMueraoCN2LyqmeLxV0=",
-            "retry_join": [{{ groups['db'] | map('to_json') | join(',') }}]
+            "retry_join": [{{ groups['db'] | map('to_json') | join(',') }}],
+            "service": {
+              "name": "webapp",
+              "check": {
+                "name": "webapp healthcheck",
+                "tcp": "localhost:{{ backend_http_port }}",
+                "interval": "10s",
+                "timeout": "2s"
+              }
+            }
           }
     - name: systemd service
       ansible.builtin.copy:
