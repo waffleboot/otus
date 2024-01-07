@@ -26,7 +26,7 @@ variable postgresql_load_balancer {
     })
     default = {
         addr = "192.168.0.251"
-        port = 5432
+        port = 5000
     }
 }
 
