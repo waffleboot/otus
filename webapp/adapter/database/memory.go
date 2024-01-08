@@ -71,19 +71,25 @@ func (s *memoryDatabase) All(ctx context.Context) ([]uuid.UUID, error) {
 		at time.Time
 	}
 	var items []item
-	_ = filepath.Walk(s.dir, func(path string, info fs.FileInfo, err error) error {
+	err := filepath.Walk(s.dir, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
+			return fmt.Errorf("walk: %w", err)
+		}
+
+		if info.IsDir() {
 			return nil
 		}
 
 		n := filepath.Base(path)
+
 		id, err := uuid.Parse(n)
 		if err != nil {
-			return nil
+			return fmt.Errorf("parse path %s (%s) as uuid: %w", path, n, err)
 		}
-		f, err := os.Open(n)
+
+		f, err := os.Open(path)
 		if err != nil {
-			return nil
+			return fmt.Errorf("open: %w", err)
 		}
 		defer func() {
 			_ = f.Close()
@@ -91,12 +97,12 @@ func (s *memoryDatabase) All(ctx context.Context) ([]uuid.UUID, error) {
 
 		b, err := io.ReadAll(f)
 		if err != nil {
-			return nil
+			return fmt.Errorf("read: %w", err)
 		}
 
 		at, err := time.Parse(time.RFC3339, string(b))
 		if err != nil {
-			return nil
+			return fmt.Errorf("parse date: %w", err)
 		}
 
 		items = append(items, item{id: id, at: at})
@@ -104,8 +110,17 @@ func (s *memoryDatabase) All(ctx context.Context) ([]uuid.UUID, error) {
 		return nil
 	})
 
+	if err != nil {
+		return nil, err
+	}
+
 	sort.Slice(items, func(i, j int) bool {
-		return items[i].at.Before(items[j].at)
+		a := items[i]
+		b := items[j]
+		if a.at == b.at {
+			return a.id.String() > b.id.String()
+		}
+		return a.at.Before(b.at)
 	})
 
 	ret := make([]uuid.UUID, 0, len(items))
