@@ -69,3 +69,10 @@ ansible-playbook deploy_pgcluster.yml
 - https://docs.ansible.com/ansible/latest/playbook_guide/complex_data_manipulation.html
 - https://developer.hashicorp.com/consul/docs/install/glossary
 - https://developer.hashicorp.com/consul/docs/agent/config/cli-flags#_bootstrap_expect
+
+```
+sudo iptables -t nat -A PREROUTING -p udp -m udp --dport 53 -j REDIRECT --to-ports 8600
+sudo iptables -t nat -A PREROUTING -p tcp -m tcp --dport 53 -j REDIRECT --to-ports 8600
+sudo iptables -t nat -A OUTPUT -d localhost -p udp -m udp --dport 53 -j REDIRECT --to-ports 8600
+sudo iptables -t nat -A OUTPUT -d localhost -p tcp -m tcp --dport 53 -j REDIRECT --to-ports 8600
+```
