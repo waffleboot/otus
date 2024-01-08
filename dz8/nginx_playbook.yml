@@ -20,8 +20,7 @@
           http {
             upstream backend {
               hash $http_x_real_ip;
-              server backend-1.ru-central1.internal:{{backend_http_port}};
-              server backend-2.ru-central1.internal:{{backend_http_port}};
+              server webapp.service.dc1.consul:{{backend_http_port}};
             }
             server {
               listen {{nginx_load_balancer_port}};
