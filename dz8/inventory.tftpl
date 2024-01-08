@@ -24,6 +24,7 @@ ansible_ssh_common_args='-oProxyCommand="ssh -o StrictHostKeyChecking=accept-new
 
 WEBAPP_DB_NAME=webapp_db
 WEBAPP_DB_USER=webapp_user
+WEBAPP_DB_MODE=memory
 WEBAPP_DB_PASSWORD=webapp_password
 WEBAPP_DB_HOST=${postgresql_load_balancer_addr}:${postgresql_load_balancer_port}
 

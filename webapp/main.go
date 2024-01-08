@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -34,6 +33,7 @@ func run() error {
 
 func runWithContext(ctx context.Context) error {
 	var (
+		mode      string
 		portNum   int
 		connStr   string
 		staticDir string
@@ -42,14 +42,11 @@ func runWithContext(ctx context.Context) error {
 	rootFlagSet := flag.NewFlagSet("", flag.ContinueOnError)
 	rootFlagSet.IntVar(&portNum, "port", 0, "http port")
 	rootFlagSet.StringVar(&staticDir, "static", "", "static dir")
+	rootFlagSet.StringVar(&mode, "mode", "", "webapp mode")
 
 	err := rootFlagSet.Parse(os.Args[1:])
 	if err != nil {
 		return err
-	}
-
-	if rootFlagSet.NArg() == 0 {
-		return errors.New("need command")
 	}
 
 	storage, err := files.NewStorage(staticDir)
@@ -59,7 +56,7 @@ func runWithContext(ctx context.Context) error {
 
 	var metadata repo.Metadata
 
-	switch cmd := rootFlagSet.Arg(0); cmd {
+	switch mode {
 	case "memory":
 		metadata = database.NewMemoryDatabase()
 	case "postgres":
@@ -76,7 +73,7 @@ func runWithContext(ctx context.Context) error {
 
 		metadata = pg
 	default:
-		return fmt.Errorf("unsupported command: %s", cmd)
+		return fmt.Errorf("unsupported mode: %s", mode)
 	}
 
 	svc := domain.NewService(metadata, storage)
