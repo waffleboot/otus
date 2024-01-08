@@ -41,8 +41,9 @@ func runWithContext(ctx context.Context) error {
 
 	rootFlagSet := flag.NewFlagSet("", flag.ContinueOnError)
 	rootFlagSet.IntVar(&portNum, "port", 0, "http port")
-	rootFlagSet.StringVar(&staticDir, "static", "", "static dir")
 	rootFlagSet.StringVar(&mode, "mode", "", "webapp mode")
+	rootFlagSet.StringVar(&staticDir, "static", "", "static dir")
+	rootFlagSet.StringVar(&connStr, "conn", "", "postgres connection string")
 
 	err := rootFlagSet.Parse(os.Args[1:])
 	if err != nil {
@@ -58,7 +59,10 @@ func runWithContext(ctx context.Context) error {
 
 	switch mode {
 	case "memory":
-		metadata = database.NewMemoryDatabase()
+		metadata, err = database.NewMemoryDatabase(staticDir)
+		if err != nil {
+			return fmt.Errorf("new memory database: %w", err)
+		}
 	case "postgres":
 		pg, err := database.NewPostgresClient(ctx, connStr, 5*time.Second)
 		if err != nil {
