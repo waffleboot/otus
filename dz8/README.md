@@ -42,3 +42,30 @@ vim /home/otus/postgresql_cluster/inventory
 ansible all -m ping
 ansible-playbook deploy_pgcluster.yml
 ```
+
+# Полезные ссылки
+
+- https://docs.ansible.com/ansible/latest/collections/ansible/builtin/iptables_module.html
+- https://nginx.org/en/docs/http/ngx_http_upstream_module.html?&_ga=2.3260528.1767852346.1704666626-1862778094.1704666626#resolver
+- https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/
+- https://stackoverflow.com/questions/49641685/nginx-resolver-dns
+- https://developer-old.gnome.org/NetworkManager/stable/NetworkManager.conf.html
+- https://unix.stackexchange.com/questions/470408/how-do-i-specify-the-order-that-network-manager-populates-etc-resolv-conf
+- https://developer-old.gnome.org/NetworkManager/stable/nm-settings-nmcli.html
+- https://www.digitalocean.com/community/tutorials/how-to-list-and-delete-iptables-firewall-rules
+- https://andydote.co.uk/2019/09/24/consul-ubuntu-dns-revisited/
+- https://developer.hashicorp.com/consul/tutorials/networking/dns-forwarding#iptables-setup
+- https://devilbox.readthedocs.io/en/latest/howto/dns/add-custom-dns-server-on-linux.html
+- https://serverfault.com/questions/810636/how-to-manage-dns-in-networkmanager-via-console-nmcli
+- https://stackoverflow.com/questions/55304126/consul-bootstrap-expect-value
+- https://www.dmosk.ru/miniinstruktions.php?mini=consul-cluster-ubuntu
+- https://developer.hashicorp.com/consul/tutorials/docker/docker-compose-datacenter
+- https://github.com/hashicorp/consul/tree/v1.17.1
+- https://support.hashicorp.com/hc/en-us/articles/1500011608961-Checking-Consul-Network-Connectivity
+- https://stackoverflow.com/questions/29537684/add-quotes-to-elemens-of-the-list-in-jinja2-ansible
+- https://www.educative.io/answers/how-to-join-a-list-of-strings-in-ansible
+- https://stackoverflow.com/questions/40696130/how-to-remove-or-exclude-an-item-in-an-ansible-template-list
+- https://docs.ansible.com/ansible/latest/reference_appendices/special_variables.html
+- https://docs.ansible.com/ansible/latest/playbook_guide/complex_data_manipulation.html
+- https://developer.hashicorp.com/consul/docs/install/glossary
+- https://developer.hashicorp.com/consul/docs/agent/config/cli-flags#_bootstrap_expect
